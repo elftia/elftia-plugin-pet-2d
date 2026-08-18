@@ -37,7 +37,7 @@ export function activate(host: AgentUiHostApi): void {
       // key), resolved from the persisted app locale at register time (D7).
       label: pageStrings(resolvePageLocale()).pageTitle,
       // Emoji glyph — the host rail mapper accepts emoji OR a lucide name.
-      icon: '🐾',
+      icon: 'PawPrint',
       render: () => createElement(ManagerPage),
       railTestId: 'sidebar-agent-page-pet-2d',
     });

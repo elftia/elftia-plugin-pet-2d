@@ -79,7 +79,7 @@ describe('manager activate (task 4.5)', () => {
     expect(registered).toHaveLength(1);
     const def = registered[0];
     expect(def.id).toBe('pet-2d');
-    expect(def.icon).toBe('🐾');
+    expect(def.icon).toBe('PawPrint');
     expect(def.railTestId).toBe('sidebar-agent-page-pet-2d');
     expect(typeof def.label).toBe('string');
     expect(def.label.length).toBeGreaterThan(0);
