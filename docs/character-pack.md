@@ -121,3 +121,85 @@ portfolio's follow-up list; it is not this repo's work.
 project, measure your sheets (`{width, height}` per sheet name), and call
 it. The dimension argument is the only thing the validator cannot do itself
 — it has no fs/canvas access and stays usable from a browser context.
+
+## User packs, the Studio, and `.petpack` (v2 authoring surface)
+
+Everything above is the pack CONTRACT — it applies identically to packs you
+author by hand (`packs-src/`) and to USER packs made in the app. What v2 adds
+is an authoring surface that never requires touching JSON, and a portable
+artifact for sharing the result.
+
+### Where user packs live
+
+Installed user packs are runtime data under the host's per-plugin storage:
+
+```
+<userData>/plugin-data/pet-2d/packs/<id>/
+  pack.json
+  sheets/<name>.png|.svg
+```
+
+NOT in the plugin install dir (an update would wipe them), and never in this
+repo's `dist/`. Deleting the plugin deletes this store — **export packs you
+care about before uninstalling** (below).
+
+### The Studio: author a pack in the app
+
+Open the pet manager (rail entry) → **Character Studio**:
+
+1. **Pick a source folder** (native directory picker). The studio catalogs
+   the image files inside; the label shows how many are usable. A
+   whale-girl-format folder additionally offers one-click import of each
+   detected character (the compatibility layer adapts its manifest into the
+   pack contract — the same path as `fromWhaleGirlManifest`).
+2. **Fill the 15 slots.** Each state row picks a sheet from the folder and
+   sets frames / fps / playback / motion. The **preview animates live**.
+3. **Fix what the problems strip names.** Validation is the same
+   `validateCharacterPack` gate as the CLI — the strip counts problems (and
+   Save stays disabled until the count is zero), so a broken id, a wrong
+   strip width, or a missing state is surfaced in place, not at install.
+4. **Save** installs the pack into the store above (an id collision with an
+   existing user pack offers overwrite; builtin ids are reserved). The new
+   card appears in the gallery immediately with a **user** chip.
+5. **Export** writes the installed pack as `<id>.petpack` through a save
+   dialog. The gallery toolbar's **Import .petpack…** button is the receive
+   end: it opens a file dialog and installs the chosen file through the same
+   guard ladder (below), the new card appearing immediately. Delete on the
+   card removes it — if it was the selected pack, selection repairs to the
+   default and the live pet falls back.
+
+### The `.petpack` format
+
+A `.petpack` is a standard ZIP holding exactly the pack dir:
+
+```
+<id>.petpack (zip)
+  pack.json              ← deflated
+  sheets/<name>.png      ← STORED (already compressed)
+  sheets/<name>.svg      ← deflated
+```
+
+Import runs a guard ladder BEFORE any byte touches the store —
+caps checked from zip headers first (file ≤ 32 MiB, ≤ 64 entries,
+≤ 8 MiB per entry, ≤ 32 MiB total uncompressed), then entry-name rules (no
+backslashes, absolute paths, drive letters, `.`/`..` segments, or symlinks;
+nothing outside `pack.json` + one-level `sheets/*.png|.svg`), then content
+sniffing (PNG magic / SVG text), then `pack.json` must parse. Semantic
+validation (the manifest rules in this document, the dimension math against
+the real bytes, and the id policy) is re-run by the same shared install
+pipeline that hand-built packs go through — there is exactly one validator.
+
+**A `.petpack` is data, never code.** Nothing in it executes; import cannot
+do anything but produce an installed pack directory or a named list of
+problems. Version skew is explicit: a future contract change rides
+`apiVersion`, and a newer pack fails a clear rejection rather than half
+rendering.
+
+### The whale-girl path (worked example — TEST MATERIAL)
+
+`fixtures/whale-girl/` walks the whole surface in tests and E2E: the compat
+offer adapts its per-character manifest → Studio prefill → save (install) →
+export `.petpack` → delete → import → the pack renders in the live pet
+window. whale-girl is **test material only**: the character is ZipZipPipe's
+IP, the fixture never enters `dist/`, and `verify:no-fixture-bytes` fails
+the build if a single fixture byte ships.

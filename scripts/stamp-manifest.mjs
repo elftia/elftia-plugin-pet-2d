@@ -31,6 +31,10 @@ const repoRoot = path.resolve(here, '..');
 const SOURCE_MANIFEST = path.join(repoRoot, 'elftia-plugin.json.src');
 const DIST_DIR = path.join(repoRoot, 'dist', 'pet-2d');
 const RENDERER_DIR = path.join(DIST_DIR, 'renderer');
+// The main half's containment root (pack-authoring D10): contributes.main
+// entries resolve under dist/pet-2d/main/, the tree the host's loader
+// `require()`s `<installDir>/main/<entry>` from.
+const MAIN_DIR = path.join(DIST_DIR, 'main');
 const OUT_MANIFEST = path.join(DIST_DIR, 'elftia-plugin.json');
 
 function fail(message) {
@@ -41,7 +45,7 @@ function fail(message) {
 /** The contribution slots that declare code entries. A slot absent from the
  * source manifest contributes nothing; a present-but-empty `entry` is an
  * error (the schema on the host side requires `min(1)`). */
-const CODE_SLOTS = ['pet', 'renderer'];
+const CODE_SLOTS = ['pet', 'renderer', 'main'];
 
 const manifest = JSON.parse(readFileSync(SOURCE_MANIFEST, 'utf8'));
 if (manifest.contributes === undefined || typeof manifest.contributes !== 'object') {
@@ -56,11 +60,13 @@ for (const slot of CODE_SLOTS) {
   if (typeof entry !== 'string' || entry.length === 0) {
     fail(`contributes.${slot}.entry must be a non-empty string`);
   }
-  // Containment: an entry with path separators escaping renderer/ (or an
-  // absolute entry) would hash a file outside the shipped tree.
-  const entryPath = path.join(RENDERER_DIR, entry);
-  if (path.relative(RENDERER_DIR, entryPath).startsWith('..')) {
-    fail(`contributes.${slot}.entry "${entry}" escapes renderer/`);
+  // Containment: an entry with path separators escaping its slot root (or
+  // an absolute entry) would hash a file outside the shipped tree. pet +
+  // renderer entries live under renderer/; the main half under main/.
+  const slotRoot = slot === 'main' ? MAIN_DIR : RENDERER_DIR;
+  const entryPath = path.join(slotRoot, entry);
+  if (path.relative(slotRoot, entryPath).startsWith('..')) {
+    fail(`contributes.${slot}.entry "${entry}" escapes ${slot === 'main' ? 'main/' : 'renderer/'}`);
   }
   let bytes;
   try {

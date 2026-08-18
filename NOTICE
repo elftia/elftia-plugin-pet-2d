@@ -31,3 +31,19 @@ script's gate for the proof, not just this notice, before trusting a build.
 If you fork this repository for public distribution, DELETE
 `fixtures/whale-girl/` first — it is a local-only development aid, not part
 of the shipped product.
+
+User pack data (runtime, per-install)
+-------------------------------------
+
+Packs authored in-app or imported from `.petpack` files are stored under the
+HOST's per-plugin data directory (`<userData>/plugin-data/pet-2d/packs/`) —
+runtime data on the user's machine, never part of this repository or its
+`dist/`. **Uninstalling the plugin deletes that store** (export packs to
+`.petpack` first to keep them). No `.petpack` is ever code: import validates
+the container and re-runs the pack contract gate before anything installs —
+a user pack is data, and only data.
+
+The whale-girl test-only posture above applies unchanged to every user-facing
+path: the compat layer, studio offer, E2E scripts, and fixtures all exist to
+PROVE the contract against a real whale-girl-format atlas, and the fixture
+never ships.

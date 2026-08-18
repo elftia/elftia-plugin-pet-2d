@@ -38,12 +38,13 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(here, '..');
 const distDir = path.join(repoRoot, 'dist', 'pet-2d');
 const rendererDir = path.join(distDir, 'renderer');
+const mainDir = path.join(distDir, 'main');
 const shippedManifestPath = path.join(distDir, 'elftia-plugin.json');
 const packsSrcDir = path.join(repoRoot, 'packs-src');
 
 const SIZE_CAP_BYTES = 2 * 1024 * 1024;
 /** Contribution slots whose `entry` declares code the host hash-pins. */
-const CODE_SLOTS = ['pet', 'renderer'];
+const CODE_SLOTS = ['pet', 'renderer', 'main'];
 
 function fail(message) {
   console.error(`verify-dist: FAIL — ${message}`);
@@ -93,23 +94,28 @@ for (const slot of CODE_SLOTS) {
       `contributes.${slot} has NO checksum — the host classifies this 'restricted': plugin:// 404s the entry and the pet window comes up EMPTY with no error (stamp-manifest should have filled this)`
     );
   }
-  const entryPath = path.join(rendererDir, entry);
+  // pet + renderer entries live under renderer/; the main half under main/
+  // (pack-authoring D10 — resolveContainedMainFile resolves against
+  // <installDir>/main).
+  const slotRoot = slot === 'main' ? mainDir : rendererDir;
+  const slotRel = slot === 'main' ? 'main/' : 'renderer/';
+  const entryPath = path.join(slotRoot, entry);
   let bytes;
   try {
     bytes = fs.readFileSync(entryPath);
   } catch {
-    fail(`declared entry renderer/${entry} is missing from the shipped tree`);
+    fail(`declared entry ${slotRel}${entry} is missing from the shipped tree`);
   }
   const base64 = createHash('sha512').update(bytes).digest('base64');
   const hex = createHash('sha512').update(bytes).digest('hex');
   if (!checksumMatches(declared, base64, hex)) {
     fail(
-      `contributes.${slot}.checksum does not match the shipped renderer/${entry} — a stale stamp; rebuild (the host would classify this 'restricted' ⇒ empty pet window)`
+      `contributes.${slot}.checksum does not match the shipped ${slotRel}${entry} — a stale stamp; rebuild (the host would classify this 'restricted' ⇒ empty pet window)`
     );
   }
-  console.log(`verify-dist: PASS — contributes.${slot} checksum matches renderer/${entry} (${bytes.length} bytes)`);
+  console.log(`verify-dist: PASS — contributes.${slot} checksum matches ${slotRel}${entry} (${bytes.length} bytes)`);
 }
-if (contributions.pet === undefined && contributions.renderer === undefined) {
+if (contributions.pet === undefined && contributions.renderer === undefined && contributions.main === undefined) {
   fail('shipped manifest declares NO code entry — nothing for the host to serve');
 }
 
@@ -123,6 +129,12 @@ if (contributions.renderer !== undefined) {
     fail('renderer/manager.mjs missing — the manager vite build step did not emit the entry');
   }
   console.log('verify-dist: PASS — renderer/manager.mjs present');
+}
+if (contributions.main !== undefined) {
+  if (!fs.existsSync(path.join(mainDir, 'index.cjs'))) {
+    fail('main/index.cjs missing — the main vite pass did not emit the entry');
+  }
+  console.log('verify-dist: PASS — main/index.cjs present');
 }
 if (!fs.existsSync(packsSrcDir)) {
   fail('packs-src/ missing — cannot derive the expected pack list');
@@ -148,7 +160,11 @@ for (const packId of packIds) {
 // Static import/export-from statements only; a DYNAMIC import(`url`) loads
 // character packs over plugin:// at runtime and is not a build-time edge.
 // \bimport rejects `ximport`; the `(` of import( cannot match the quote.
-const IMPORT_RE = /\bimport\s*(?:[\w$*{},\s]*?\bfrom\s*)?['"]([^'"]+)['"]/g;
+// The lookbehind rejects STRING-INTERNAL tails: a literal like
+// "pet-manager-import" ends in `import` + the closing quote, and the naive
+// \b form then quote-paired across code into a bogus "specifier" (fix-round
+// F2). A statement's `import` is never preceded by word/$/./- characters.
+const IMPORT_RE = /(?<![\w$.-])\bimport\s*(?:[\w$*{},\s]*?\bfrom\s*)?['"]([^'"]+)['"]/g;
 const EXPORT_FROM_RE = /\bexport\s+(?:\*(?:\s+as\s+[\w$]+)?|\{[^}]*\})\s*from\s*['"]([^'"]+)['"]/g;
 
 /** A specifier is fine when relative, root-relative, or a URL scheme —
@@ -201,6 +217,49 @@ for (const file of walk(distDir).filter((f) => f.toLowerCase().endsWith('.mjs'))
     }
   }
 }
+// --- 3b) the CJS require-edge gate (pack-authoring D10) ------------------------
+//
+// The main half ships as CJS (`main/index.cjs`) and runs in the HOST'S MAIN
+// process, where `require()` resolves bare specifiers against the HOST's
+// externals shim (`pluginMainHostExternals`): node builtins natively, plus
+// EXACTLY the host-provided external set (archiver among them). Any other
+// bare require would MODULE_NOT_FOUND at plugin-boot time and the whole verb
+// table would silently never register — tsc/vitest cannot see this (they
+// resolve through the junction), so the gate lives HERE, over shipped bytes.
+// A new external must be added to BOTH the vite main pass and this allowlist
+// (mirroring the manager's import-map rule).
+const REQUIRE_RE = /\brequire\s*\(\s*['"]([^'"]+)['"]\s*\)/g;
+const { builtinModules } = await import('node:module');
+const NODE_BUILTINS = new Set([
+  ...builtinModules,
+  ...builtinModules.map((m) => `node:${m}`),
+]);
+/** Bare specifiers the HOST resolves for the main half (the main pass's exact external set). */
+const MAIN_EXTERNALS = new Set(['archiver', '@elftia/plugin-types']);
+
+for (const file of walk(distDir).filter((f) => f.toLowerCase().endsWith('.cjs'))) {
+  const code = fs.readFileSync(file, 'utf8');
+  const rel = path.relative(repoRoot, file);
+  REQUIRE_RE.lastIndex = 0;
+  let match = REQUIRE_RE.exec(code);
+  while (match !== null) {
+    const specifier = match[1];
+    if (
+      !isAllowedSpecifier(specifier) &&
+      !NODE_BUILTINS.has(specifier) &&
+      !MAIN_EXTERNALS.has(specifier)
+    ) {
+      fail(
+        `${rel} require()s "${specifier}" — not a node builtin, relative, or host external (archiver); the host would throw MODULE_NOT_FOUND at boot`
+      );
+    }
+    match = REQUIRE_RE.exec(code);
+  }
+}
+console.log(
+  'verify-dist: PASS — CJS require() edges are within the main-half allowance (node builtins + archiver)'
+);
+
 console.log(
   'verify-dist: PASS — bare static specifiers are within the per-entry allowance (pet/packs: none; manager: import-map set)'
 );

@@ -64,6 +64,14 @@ the plugin ships a full main-window page (`contributes.renderer`) with:
   click a card to switch packs (the running pet switches live via the
   cross-window storage event — at most one preference-debounce (~0.5 s)
   behind — and the choice survives window OFF/ON and app restarts).
+- **Character Studio + user packs (v2)** — author a pack in-app from a
+  folder of sprite strips (or accept the one-click whale-girl offer), watch
+  the same validator surface problems live, save it into the user pack
+  store, export it as a `.petpack` file, and import shared ones back through
+  the gallery's **Import .petpack…** button. See
+  [`docs/character-pack.md`](docs/character-pack.md) for the format and the
+  flow. Cards for user packs carry a **user** chip and offer **delete**;
+  deleting the selected pack repairs selection to the default.
 - **Growth ledger** — level/XP bar, stats, and the newest-first memory ring,
   read live from the same store the pet window writes (refreshes on every
   change). If you ship a ledger-less build, this section shows an honest
@@ -88,11 +96,27 @@ card; the gallery and ledger stay functional (they are plugin-local).
 
 ## Authoring a character pack
 
-Write `packs-src/<your-pack>/pack.json` + `sheets/`, then run
-`npm run build:packs` and `npm run verify:packs`. The full contract —
+Two paths, one contract:
+
+- **In-app (no JSON):** the manager page's Character Studio catalogs a
+  source folder, prefills the 15 state slots, validates live, and saves
+  straight into the user pack store. Export shares the result as
+  `.petpack`; Import installs one back. Full how-to in
+  [`docs/character-pack.md`](docs/character-pack.md).
+- **By hand:** write `packs-src/<your-pack>/pack.json` + `sheets/`, then run
+  `npm run build:packs` and `npm run verify:packs`. The full contract —
 manifest tables, frame-0-is-rest-pose, the left-facing baseline, the
 15-state requirement, a worked example — is
 [`docs/character-pack.md`](docs/character-pack.md). To adapt a
+
+**Where user packs live, and their lifetime:** installed user packs are
+runtime data under the host's per-plugin storage
+(`<userData>/plugin-data/pet-2d/packs/`), never in the plugin install and
+never in this repo's `dist/`. **Uninstalling the plugin deletes that
+store** — export any pack you want to keep as a `.petpack` first (the
+studio's Export button, or the card's export control). Deleting a single
+pack removes only that pack; if it was the selected one, selection repairs
+to the default automatically.
 whale-girl-format install you already have rights to:
 [`docs/packs/whale-girl-compat.md`](docs/packs/whale-girl-compat.md).
 

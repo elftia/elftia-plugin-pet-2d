@@ -88,6 +88,16 @@ export default [
     },
   },
   {
+    // src/main/** runs in the HOST'S MAIN PROCESS (node) — the pack-authoring
+    // main half (pack store, dialogs, .petpack read/write). Node globals are
+    // its birthright; `no-console` stays warn with info allowed (same as the
+    // rest of src — the main half logs activation/degradation by design).
+    files: ['src/main/**/*.ts'],
+    languageOptions: {
+      globals: { ...globals.node },
+    },
+  },
+  {
     // TS build/verify scripts run in NODE (via tsx): `process`/`Buffer`/
     // `console.log` are theirs by right — CLI output is the product here.
     files: ['scripts/**/*.ts'],
@@ -102,8 +112,10 @@ export default [
     // Plain-JS block for build/verify/spike tooling and the packs-src
     // authoring generators — no type-aware rules, no tsconfig project (these
     // run standalone via `node`, never compiled), same import-order +
-    // basic-hygiene rules as src/.
-    files: ['scripts/**/*.mjs', 'packs-src/**/*.mjs'],
+    // basic-hygiene rules as src/. `scripts/e2e/*.cjs` (the Tier-C CDP
+    // drivers) join here: node globals for the driver half, browser globals
+    // because lib-cdp evals ride `fetch`/`WebSocket`.
+    files: ['scripts/**/*.mjs', 'packs-src/**/*.mjs', 'scripts/**/*.cjs'],
     languageOptions: {
       sourceType: 'module',
       ecmaVersion: 'latest',

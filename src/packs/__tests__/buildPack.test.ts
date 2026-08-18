@@ -92,6 +92,25 @@ describe('buildPackFromSourceDir (synthetic packs)', () => {
     await mkdir(dir, { recursive: true });
     await expect(buildPackFromSourceDir(dir)).rejects.toThrow(/pack\.json/);
   });
+
+  it('rejects manifest sheet names that are not plain file names (traversal guard, fix-round F1)', async () => {
+    // The pack sits three levels deep so '../../../…' resolves to a REAL file
+    // outside it — without the transport-layer guard the build would succeed
+    // on that outside file. '..' and '/etc/…' need no target: the guard
+    // rejects the NAME itself, before any fs access.
+    const dir = join(workDir, 'a', 'b', 'traversal-pack');
+    await writeValidPack(dir);
+    await mkdir(join(workDir, 'out'), { recursive: true });
+    await writeFile(join(workDir, 'out', 'secret.png'), ONE_FRAME_SVG, 'utf8');
+    for (const sheet of ['../../../out/secret.png', '..\\..\\..\\out\\secret.png', '..', '/etc/secret.png']) {
+      const manifest = JSON.parse(await readFile(join(dir, 'pack.json'), 'utf8')) as {
+        states: Record<string, { sheet: string }>;
+      };
+      manifest.states.idle.sheet = sheet;
+      await writeFile(join(dir, 'pack.json'), JSON.stringify(manifest), 'utf8');
+      await expect(buildPackFromSourceDir(dir), `"${sheet}"`).rejects.toThrow(/is not a plain file name/);
+    }
+  });
 });
 
 // Keep the URL→path helper honest (it is how the repo root is derived elsewhere).

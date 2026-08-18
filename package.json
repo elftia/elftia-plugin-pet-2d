@@ -6,13 +6,15 @@
   "type": "module",
   "license": "MIT",
   "dependencies": {},
-  "devDependencies": {},
+  "devDependencies": {
+    "adm-zip": "^0.5.16"
+  },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
     "lint": "eslint .",
     "test": "vitest run",
     "build:packs": "tsx scripts/build-packs.ts",
-    "build": "tsx scripts/build-packs.ts && vite build --config vite.plugin.config.ts && vite build --config vite.plugin.manager.config.ts && node scripts/stamp-manifest.mjs && node scripts/verify-dist.mjs",
+    "build": "tsx scripts/build-packs.ts && vite build --config vite.plugin.config.ts && vite build --config vite.plugin.manager.config.ts && vite build --config vite.plugin.main.config.ts && node scripts/stamp-manifest.mjs && node scripts/verify-dist.mjs",
     "verify:packs": "tsx scripts/verify-packs.ts",
     "verify:dist": "node scripts/verify-dist.mjs",
     "verify:no-fixture-bytes": "node scripts/verify-no-fixture-bytes.mjs",

@@ -43,6 +43,7 @@
     "scripts/**/*.ts",
     "vite.plugin.config.ts",
     "vite.plugin.manager.config.ts",
+    "vite.plugin.main.config.ts",
     "vitest.config.ts"
   ],
   "exclude": ["dist", "node_modules", "fixtures", "packs-src"]

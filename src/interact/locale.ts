@@ -7,6 +7,9 @@
  * every host refactor. `en` is the fallback for every unrecognized tag.
  */
 
+import type { StudioStrings } from './studioStrings';
+import { studioStrings } from './studioStrings';
+
 /** The three languages this plugin ships strings for. */
 export type PetLocale = 'en' | 'zh' | 'ja';
 
@@ -96,6 +99,20 @@ export interface PageStrings {
   readonly cardStatesCaption: string;
   /** Badge on the currently-selected pack card. */
   readonly cardSelectedBadge: string;
+  /** Chip on a USER-authored pack card (group 5, D6). */
+  readonly userPackChip: string;
+  /** Per-card export action label (user packs only). */
+  readonly packExportAction: string;
+  /** Per-card delete action label (user packs only). */
+  readonly packDeleteAction: string;
+  /** Transient note after a successful export — `{path}` is the file. */
+  readonly exportDoneNote: string;
+  /** Gallery-level `.petpack` import action (the share receive end). */
+  readonly importAction: string;
+  /** Transient note after a successful import — `{id}` is the pack id. */
+  readonly importDoneNote: string;
+  /** Import rejection note — `{problem}` is the gate's verbatim message. */
+  readonly importFailedNote: string;
   /** Section 5 — ledger panel. */
   readonly ledgerTitle: string;
   readonly ledgerUnavailableTitle: string;
@@ -117,6 +134,8 @@ export interface PageStrings {
   readonly footerNote: string;
   /** Skeleton placeholder (tasks 4.2) — honest copy inside empty shells. */
   readonly sectionPlaceholder: string;
+  /** The Pack Studio sub-view's strings (D7.1–.6; table in studioStrings.ts). */
+  readonly studio: StudioStrings;
 }
 
 const PAGE_STRINGS: Record<PetLocale, PageStrings> = {
@@ -155,6 +174,14 @@ const PAGE_STRINGS: Record<PetLocale, PageStrings> = {
     sectionPlaceholder: 'This section fills in as the page is built out.',
     cardStatesCaption: '{count} states',
     cardSelectedBadge: 'Current',
+    userPackChip: 'User pack',
+    packExportAction: 'Export',
+    packDeleteAction: 'Delete',
+    exportDoneNote: 'Exported to {path}',
+    importAction: 'Import .petpack…',
+    importDoneNote: 'Imported pack "{id}"',
+    importFailedNote: 'Import failed: {problem}',
+    studio: studioStrings('en'),
   },
   zh: {
     pageTitle: '桌面宠物',
@@ -188,6 +215,14 @@ const PAGE_STRINGS: Record<PetLocale, PageStrings> = {
     sectionPlaceholder: '此区块将在后续步骤填充。',
     cardStatesCaption: '{count} 状态',
     cardSelectedBadge: '当前',
+    userPackChip: '用户包',
+    packExportAction: '导出',
+    packDeleteAction: '删除',
+    exportDoneNote: '已导出到 {path}',
+    importAction: '导入 .petpack…',
+    importDoneNote: '已导入角色包「{id}」',
+    importFailedNote: '导入失败：{problem}',
+    studio: studioStrings('zh'),
   },
   ja: {
     pageTitle: 'デスクトップペット',
@@ -222,6 +257,14 @@ const PAGE_STRINGS: Record<PetLocale, PageStrings> = {
     sectionPlaceholder: 'このセクションは今後のステップで埋まります。',
     cardStatesCaption: '{count} 状態',
     cardSelectedBadge: '現在',
+    userPackChip: 'ユーザーパック',
+    packExportAction: 'エクスポート',
+    packDeleteAction: '削除',
+    exportDoneNote: '{path} にエクスポートしました',
+    importAction: '.petpack をインポート…',
+    importDoneNote: 'パック「{id}」をインポートしました',
+    importFailedNote: 'インポート失敗：{problem}',
+    studio: studioStrings('ja'),
   },
 };
 

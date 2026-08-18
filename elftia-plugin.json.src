@@ -16,6 +16,17 @@
       "requiredMajor": 1,
       "requiredMinor": 54,
       "builtAgainst": "1.54.0"
+    },
+    "main": {
+      "entry": "index.cjs",
+      "requiredMajor": 1,
+      "requiredMinor": 35,
+      "builtAgainst": "1.54.0"
     }
-  }
+  },
+  "permissions": [
+    "host:storage",
+    "host:native-dialog",
+    "node:fs"
+  ]
 }

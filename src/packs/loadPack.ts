@@ -52,7 +52,7 @@ export async function loadPack(
 ): Promise<CharacterPack> {
   try {
     const mod = await importer(packModuleUrl(id));
-    const pack = normalizePackModule(mod.default);
+    const pack = normalizePackPayload(mod.default);
     if (pack) return pack;
     console.warn(`[pet-2d] pack "${id}" has an unusable module shape; using the fallback glyph`);
   } catch (error) {
@@ -63,8 +63,14 @@ export async function loadPack(
   return fallbackPack();
 }
 
-/** Runtime shape check (see header). Returns null — never throws — on doubt. */
-function normalizePackModule(defaultExport: unknown): CharacterPack | null {
+/**
+ * Runtime shape check (see header). Returns null — never throws — on doubt.
+ * SHARED (task 2.3, D6): the module path here AND the user-pack ipc path
+ * (`userPacks.ts`, group 5) push their payload through this ONE gate —
+ * both intakes get the same all-15-states / url-string / positive-int-
+ * frames / slot-cross-check rules, and both fall back identically on doubt.
+ */
+export function normalizePackPayload(defaultExport: unknown): CharacterPack | null {
   if (typeof defaultExport !== 'object' || defaultExport === null) return null;
   const { manifest, sheets } = defaultExport as {
     manifest?: unknown;

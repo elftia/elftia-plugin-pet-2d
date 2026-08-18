@@ -137,7 +137,8 @@ describe('pet window — storage event switches the pack live (task 7.1)', () =>
     await vi.advanceTimersByTimeAsync(0);
 
     expect(loadPack).toHaveBeenCalledTimes(2);
-    expect(loadPack).toHaveBeenLastCalledWith('tin-bot');
+    // resolvePack forwards the (absent) importer seam as its 2nd arg.
+    expect(loadPack).toHaveBeenLastCalledWith('tin-bot', undefined);
     expect(spriteBackground()).toContain(sheetUrlFor('tin-bot', 'idle'));
     // No extra persist from the pet side: the stored value is exactly what
     // the (simulated) manager page wrote — not rewritten by the pet.

@@ -9,7 +9,8 @@
  *
  *   prefs (D11)  → which pack the user chose; survives ledger trim
  *   stage (D6)   → the DOM layers + player + alpha hit-test
- *   packs (D1)   → loadPack never fails (fallback glyph on any doubt)
+ *   packs (D1/D6)→ resolvePack never fails (built-in module | user ipc pack
+ *                  | fallback glyph on any doubt)
  *   facts (D3)   → host.petRuntime.subscribeFacts → snapshot (may stay
  *                  null forever — cold start is fully functional, D13)
  *   loop (D13)   → 125 ms sense tick + the player's setTimeout stepper;
@@ -44,8 +45,17 @@ import type { PetState } from './contract/petState';
 import { menuStrings, resolveLocale } from './interact/locale';
 import { attachContextMenu, type MenuHandle, openContextMenu } from './interact/menu';
 import { attachPointerHandlers, createPointerController } from './interact/pointer';
-import { type CharacterPack, loadPack } from './packs/loadPack';
-import { DEFAULT_PACK_ID, isKnownPackId, nextPackId } from './packs/registry';
+import { type CharacterPack } from './packs/loadPack';
+import { DEFAULT_PACK_ID, isKnownPackId } from './packs/registry';
+import {
+  nextPackInRotation,
+  PACKS_REV_KEY,
+  readCachedUserPacks,
+  refreshUserPacks,
+  resolvePack,
+  rotationPool,
+  type UserPackSummary,
+} from './packs/userPacks';
 import type { Facing } from './render/facing';
 import { createBrowserHitTestDeps } from './render/hitTest';
 import type { PetWindowSize } from './render/sheetGeometry';
@@ -92,14 +102,31 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
     console.warn('[pet-2d] host.petRuntime absent — running facts-free (optional per F5)');
   }
 
+  // --- user packs (D6): scoped ipc to the main half's store ------------------
+  // `host.ipc` is member-non-optional in the 1.54 types but resolvePack still
+  // feature-detects it (an older host or a narrowed preload must degrade to
+  // built-ins, never fail the boot). The cache seeds rotation instantly; the
+  // live fetch replaces it as soon as it lands.
+  const ipc: unknown = host.ipc;
+  let userPacks: UserPackSummary[] = readCachedUserPacks(window.localStorage);
+  function isSelectablePack(id: string): boolean {
+    return isKnownPackId(id) || userPacks.some((pack) => pack.id === id);
+  }
+  async function refetchUserPacks(): Promise<void> {
+    userPacks = await refreshUserPacks(ipc, window.localStorage);
+  }
+  void refetchUserPacks();
+
   // --- preferences (D11) ----------------------------------------------------
+  // A stored id may now be a USER pack too, so an unknown id is no longer
+  // coerced at boot — resolvePack decides (user ipc pack, or the glyph).
   const prefs: PrefsStore = createPrefsStore();
   let packId: string = prefs.read().packId ?? '';
-  if (!isKnownPackId(packId)) packId = DEFAULT_PACK_ID;
+  if (packId === '') packId = DEFAULT_PACK_ID;
 
   // --- stage + pack (both degrade, never throw) ------------------------------
   const stage: Stage = createStage({ hitTestDeps: createBrowserHitTestDeps(document) });
-  let pack: CharacterPack = await loadPack(packId);
+  let pack: CharacterPack = await resolvePack(packId, { ipc });
 
   let windowSize: PetWindowSize = { width: 256, height: 256 };
   let stagePx = 256;
@@ -281,12 +308,13 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
 
   // Pack-switch core (stage.ts 5.5 contract): load, invalidate the alpha
   // hit-test, re-apply geometry + state. `packLoadSeq` drops out-of-order
-  // loads when switches arrive faster than the module import resolves.
+  // loads when switches arrive faster than the load resolves. Every load is
+  // resolvePack (built-in module | user ipc | glyph — D6's one dispatch).
   let packLoadSeq = 0;
   async function applyPack(next: string): Promise<void> {
     const seq = ++packLoadSeq;
     packId = next;
-    const loaded = await loadPack(next);
+    const loaded = await resolvePack(next, { ipc });
     if (seq !== packLoadSeq) return; // a newer switch superseded this load
     pack = loaded;
     stage.invalidateHitTest();
@@ -296,7 +324,7 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
   }
 
   async function switchPack(): Promise<void> {
-    const next = nextPackId(packId);
+    const next = nextPackInRotation(packId, rotationPool(userPacks.map((p) => p.id)));
     prefs.setPackId(next);
     await applyPack(next);
     ledger?.noteInteraction('switchCharacter');
@@ -306,14 +334,41 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
   // prefs key from the MAIN window; the browser's `storage` event lands HERE
   // (it never fires in the writing window). Read DISK truth (`readPrefs`),
   // not the store's in-memory snapshot — that snapshot only tracks OUR writes,
-  // so it is exactly stale after another window wrote the key. Switch live,
-  // persist NOTHING extra — this event IS the page's write.
+  // so it is exactly stale after another window wrote the key. A USER id the
+  // pet doesn't know yet (the manager just saved it — the rev event and this
+  // one race) is resolved by refetching the list FIRST, not by dropping the
+  // switch.
   function onPrefsStorage(event: StorageEvent): void {
     if (event.key !== PREFS_STORAGE_KEY) return;
     if (event.storageArea !== window.localStorage) return;
     const next = readPrefs(window.localStorage).packId ?? '';
-    if (next === packId || !isKnownPackId(next)) return;
-    void applyPack(next);
+    if (next === packId) return;
+    if (isKnownPackId(next)) {
+      void applyPack(next);
+      return;
+    }
+    void (async () => {
+      await refetchUserPacks();
+      if (!isSelectablePack(next)) return; // unknown id — keep the current pack
+      await applyPack(next);
+    })();
+  }
+
+  // The store-revision half of the refresh protocol (D6): the manager bumps
+  // PACKS_REV_KEY after every store mutation (save/delete/import); the bump
+  // lands here as a `storage` event and the list is refetched. If the pack
+  // the pet is showing was the one deleted, repair to the default — the
+  // alternative is a pet permanently rendering the fallback glyph.
+  function onPacksRevStorage(event: StorageEvent): void {
+    if (event.key !== PACKS_REV_KEY) return;
+    if (event.storageArea !== window.localStorage) return;
+    void (async () => {
+      await refetchUserPacks();
+      if (packId !== '' && !isSelectablePack(packId)) {
+        prefs.setPackId(DEFAULT_PACK_ID);
+        await applyPack(DEFAULT_PACK_ID);
+      }
+    })();
   }
 
   const strings = menuStrings(resolveLocale(navigator.language));
@@ -368,6 +423,7 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
   const onPageHide = (): void => prefs.flush();
   window.addEventListener('pagehide', onPageHide);
   window.addEventListener('storage', onPrefsStorage);
+  window.addEventListener('storage', onPacksRevStorage);
 
   // v1 has no deactivate verb — activate() runs once per pet window and the
   // window's own teardown is the teardown. The detach handles are collected
@@ -380,6 +436,7 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
     () => document.removeEventListener('visibilitychange', onVisibilityChange),
     () => window.removeEventListener('pagehide', onPageHide),
     () => window.removeEventListener('storage', onPrefsStorage),
+    () => window.removeEventListener('storage', onPacksRevStorage),
   ];
   disposersFromPreviousActivate = disposers;
 

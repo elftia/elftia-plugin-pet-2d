@@ -1,17 +1,13 @@
 /**
- * scripts/lib/packModule.ts — D1's pack-module emission: one ES module per
- * pack, default-exporting `{ manifest, sheets }` where each sheet entry is a
- * `SheetSource = { url, frames }` and `url` is a DATA URI. This is the ONLY
- * place a sheet's URL flavor is produced (the runtime loader never sees a
- * transport — `src/packs/loadPack.ts` consumes whatever `url` string is
- * here), and it is shared by build-packs, verify-packs, and the Tier-B
- * tests so the emitted format cannot drift between them.
- *
- * Why data URIs (D1, spike ① re-probe): the pet window loads from
- * `app://bundle` (dev: localhost) — from that origin a cross-origin
- * `plugin://…` `<img>` is `img-src`-blocked and `fetch` is `connect-src`
- * `-blocked`, while a dynamic `.mjs` module import loads AND stays
- * canvas-readable (the alpha hit-test needs untainted `getImageData`).
+ * scripts/lib/packModule.ts — D1's pack-module EMISSION (build-time only).
+ * The data-URI encoders moved to `src/packs/assemblePack.ts` (task 2.2) —
+ * that src module is now the ONLY place a sheet's URL flavor is produced
+ * (emitted modules here and the main half's `packs:load` payloads share
+ * those encoders byte-for-byte); this file emits one ES module per pack,
+ * default-exporting `{ manifest, sheets }` where each sheet entry is an
+ * `EmittedSheetSource = { url, frames }`. User packs NEVER get a module
+ * (D8) — they ride the store + ipc instead, so this emitter is not in
+ * their path at all.
  */
 import type { CharacterPackManifest } from '../../src/contract/characterPack';
 
@@ -19,16 +15,6 @@ import type { CharacterPackManifest } from '../../src/contract/characterPack';
 export interface EmittedSheetSource {
   readonly url: string;
   readonly frames: number;
-}
-
-/** Percent-encoded inline SVG — ASCII-safe, no base64 inflation for the shipped packs. */
-export function svgSheetToDataUri(svg: string): string {
-  return `data:image/svg+xml,${encodeURIComponent(svg.trim())}`;
-}
-
-/** Base64 inline PNG — ~4/3× the bytes (D1's documented cost for PNG-based packs). */
-export function pngSheetToDataUri(bytes: Uint8Array): string {
-  return `data:image/png;base64,${Buffer.from(bytes).toString('base64')}`;
 }
 
 /**
