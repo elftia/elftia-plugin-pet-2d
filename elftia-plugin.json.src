@@ -8,8 +8,8 @@
     "pet": {
       "entry": "pet.mjs",
       "requiredMajor": 1,
-      "requiredMinor": 51,
-      "builtAgainst": "1.51.0"
+      "requiredMinor": 52,
+      "builtAgainst": "1.52.0"
     }
   }
 }

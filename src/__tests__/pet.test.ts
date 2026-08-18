@@ -68,7 +68,7 @@ function createFakePetRuntime(options: { throwGetConfig?: boolean } = {}) {
 function createFakeHost(options: { withPetRuntime?: boolean; throwGetConfig?: boolean } = {}) {
   const pet = createFakePetRuntime({ throwGetConfig: options.throwGetConfig });
   const host: Record<string, unknown> = {
-    version: '1.51.0',
+    version: '1.52.0',
     compat: { major: 1, minor: 51 },
     react: null, // activate() must never reach past petRuntime — dummies suffice
     ui: null,

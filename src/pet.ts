@@ -344,11 +344,11 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
 }
 
 // Type-only proof for task 2.3's gate ("HOST_API_VERSION resolves to
-// 1.51.0"): errors at compile time if the pinned host API version this repo
+// 1.52.0"): errors at compile time if the pinned host API version this repo
 // was built against ever drifts, with zero runtime cost or bundle impact
 // (`import type` + `verbatimModuleSyntax` erase it before the bundle).
-type _HostApiVersionProbe = typeof HOST_API_VERSION extends '1.51.0'
+type _HostApiVersionProbe = typeof HOST_API_VERSION extends '1.52.0'
   ? true
-  : ['HOST_API_VERSION drifted from 1.51.0 — see tsconfig.json paths note'];
+  : ['HOST_API_VERSION drifted from 1.52.0 — see tsconfig.json paths note'];
 const _hostApiVersionProbe: _HostApiVersionProbe = true as _HostApiVersionProbe;
 void _hostApiVersionProbe;
