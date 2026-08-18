@@ -50,10 +50,24 @@ import type { Facing } from './render/facing';
 import { createBrowserHitTestDeps } from './render/hitTest';
 import type { PetWindowSize } from './render/sheetGeometry';
 import { createStage, type Stage, type StageEntry } from './render/stage';
-import { createPrefsStore, type PrefsStore } from './state/prefs';
+import {
+  createPrefsStore,
+  PREFS_STORAGE_KEY,
+  type PrefsStore,
+  readPrefs,
+} from './state/prefs';
 
 /** D13: the sense tick. 8 Hz — far finer than any window that matters. */
 const SENSE_TICK_MS = 125;
+
+/**
+ * v1 has no deactivate verb — activate() runs once per pet window and the
+ * window's own teardown is the teardown. But a SECOND activate (a re-imported
+ * module, a retried boot, a test harness) must not stack the first
+ * activation's listeners: a new activation supersedes the previous one by
+ * running its detach handles at entry.
+ */
+let disposersFromPreviousActivate: Array<() => void> = [];
 
 export async function activate(host: AgentUiHostApi): Promise<void> {
   try {
@@ -66,6 +80,9 @@ export async function activate(host: AgentUiHostApi): Promise<void> {
 }
 
 async function startPet(host: AgentUiHostApi): Promise<void> {
+  for (const dispose of disposersFromPreviousActivate) dispose();
+  disposersFromPreviousActivate = [];
+
   const now = (): number => Date.now();
   const random: RandomSource = Math.random;
 
@@ -262,16 +279,41 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
   // --- the context menu (D12) -----------------------------------------------
   let menu: MenuHandle | null = null;
 
-  async function switchPack(): Promise<void> {
-    const next = nextPackId(packId);
+  // Pack-switch core (stage.ts 5.5 contract): load, invalidate the alpha
+  // hit-test, re-apply geometry + state. `packLoadSeq` drops out-of-order
+  // loads when switches arrive faster than the module import resolves.
+  let packLoadSeq = 0;
+  async function applyPack(next: string): Promise<void> {
+    const seq = ++packLoadSeq;
     packId = next;
-    prefs.setPackId(next);
-    pack = await loadPack(next);
-    stage.invalidateHitTest(); // pack-switch contract (stage.ts 5.5)
+    const loaded = await loadPack(next);
+    if (seq !== packLoadSeq) return; // a newer switch superseded this load
+    pack = loaded;
+    stage.invalidateHitTest();
     applyWindowSize(windowSize);
     applyState(currentPetState);
     markInteraction();
+  }
+
+  async function switchPack(): Promise<void> {
+    const next = nextPackId(packId);
+    prefs.setPackId(next);
+    await applyPack(next);
     ledger?.noteInteraction('switchCharacter');
+  }
+
+  // Cross-window selection (task 7.1): the manager page's Gallery writes the
+  // prefs key from the MAIN window; the browser's `storage` event lands HERE
+  // (it never fires in the writing window). Read DISK truth (`readPrefs`),
+  // not the store's in-memory snapshot — that snapshot only tracks OUR writes,
+  // so it is exactly stale after another window wrote the key. Switch live,
+  // persist NOTHING extra — this event IS the page's write.
+  function onPrefsStorage(event: StorageEvent): void {
+    if (event.key !== PREFS_STORAGE_KEY) return;
+    if (event.storageArea !== window.localStorage) return;
+    const next = readPrefs(window.localStorage).packId ?? '';
+    if (next === packId || !isKnownPackId(next)) return;
+    void applyPack(next);
   }
 
   const strings = menuStrings(resolveLocale(navigator.language));
@@ -325,6 +367,7 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
   document.addEventListener('visibilitychange', onVisibilityChange);
   const onPageHide = (): void => prefs.flush();
   window.addEventListener('pagehide', onPageHide);
+  window.addEventListener('storage', onPrefsStorage);
 
   // v1 has no deactivate verb — activate() runs once per pet window and the
   // window's own teardown is the teardown. The detach handles are collected
@@ -332,10 +375,13 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
   const disposers: Array<() => void> = [
     detachPointer,
     detachContextMenu,
+    stopTick,
+    () => stage.player.stop(),
     () => document.removeEventListener('visibilitychange', onVisibilityChange),
     () => window.removeEventListener('pagehide', onPageHide),
+    () => window.removeEventListener('storage', onPrefsStorage),
   ];
-  void disposers;
+  disposersFromPreviousActivate = disposers;
 
   // --- go ---------------------------------------------------------------------
   applyState('idle');
@@ -344,11 +390,12 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
 }
 
 // Type-only proof for task 2.3's gate ("HOST_API_VERSION resolves to
-// 1.52.0"): errors at compile time if the pinned host API version this repo
-// was built against ever drifts, with zero runtime cost or bundle impact
+// 1.54.0" — bumped with the v1.54 manager-page promotion): errors at compile
+// time if the pinned host API version this repo was built against ever
+// drifts, with zero runtime cost or bundle impact
 // (`import type` + `verbatimModuleSyntax` erase it before the bundle).
-type _HostApiVersionProbe = typeof HOST_API_VERSION extends '1.52.0'
+type _HostApiVersionProbe = typeof HOST_API_VERSION extends '1.54.0'
   ? true
-  : ['HOST_API_VERSION drifted from 1.52.0 — see tsconfig.json paths note'];
+  : ['HOST_API_VERSION drifted from 1.54.0 — see tsconfig.json paths note'];
 const _hostApiVersionProbe: _HostApiVersionProbe = true as _HostApiVersionProbe;
 void _hostApiVersionProbe;

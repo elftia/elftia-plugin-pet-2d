@@ -66,6 +66,48 @@ export interface LedgerSummary {
 }
 
 /**
+ * One memory row as the MANAGER PAGE renders it (D6⑤): the ledger's own
+ * entry plus its precomputed relative timestamp. Defined here — not in
+ * `src/ledger/inspect.ts` — so the page can `import type` it and still
+ * typecheck in the TRIMMED build (src/ledger is deleted there; the contract
+ * tree survives). Same meeting-point trick as {@link LedgerSummary}.
+ */
+export interface LedgerMemoryItemView {
+  readonly text: string;
+  readonly at: number;
+  /** Precomputed against the summarize-time clock, e.g. "5m ago". */
+  readonly relative: string;
+}
+
+/**
+ * The manager page's ledger panel model (D6⑤): `summarizeLedger()` in
+ * `src/ledger/inspect.ts` produces it from a persisted `LedgerState`; the
+ * panel renders it without computing anything. Everything display-shaped
+ * (percent, human durations, relative times) is PRECOMPUTED so the panel
+ * stays dumb and the pure projection stays unit-testable in isolation.
+ */
+export interface LedgerPanelModel {
+  /** `levelFor(xp)` — recomputed, never read from storage (D10). */
+  readonly level: number;
+  /** The newest unlocked title id, or `null` before the first unlock. */
+  readonly titleId: string | null;
+  readonly xp: number;
+  /** XP progress within the CURRENT level band. */
+  readonly xpIntoLevel: number;
+  /** Width of the current level band (`xpForLevel(level+1) - xpForLevel(level)`). */
+  readonly xpForNextLevel: number;
+  /** Integer 0..100 — the XP bar's fill percentage. */
+  readonly progressPct: number;
+  readonly stats: LedgerStats;
+  /** `stats.activeMs` preformatted, e.g. "6h 05m". */
+  readonly activeHuman: string;
+  readonly unlockedTitles: ReadonlyArray<string>;
+  /** Newest first (the ring stores oldest -> newest; the page shows the newest). */
+  readonly memory: ReadonlyArray<LedgerMemoryItemView>;
+  readonly updatedAt: number;
+}
+
+/**
  * The full port (D10). Exactly three methods — `pet.ts` never reaches past
  * this interface into the ledger's internals.
  */

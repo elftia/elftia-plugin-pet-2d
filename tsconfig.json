@@ -11,6 +11,11 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
+    // .tsx support for the manager page (src/manager/page.tsx): the
+    // automatic runtime emits `react/jsx-runtime` imports, which the
+    // manager vite pass marks external (host import map) — mirroring the
+    // DS renderer setup.
+    "jsx": "react-jsx",
     "verbatimModuleSyntax": true,
     "types": [],
     "paths": {
@@ -32,6 +37,13 @@
       "@elftia/agent-spec/*": ["../elftia-wt-pet/packages/agent-spec/src/*"]
     }
   },
-  "include": ["src/**/*.ts", "scripts/**/*.ts", "vite.plugin.config.ts", "vitest.config.ts"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "scripts/**/*.ts",
+    "vite.plugin.config.ts",
+    "vite.plugin.manager.config.ts",
+    "vitest.config.ts"
+  ],
   "exclude": ["dist", "node_modules", "fixtures", "packs-src"]
 }

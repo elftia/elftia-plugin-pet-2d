@@ -28,6 +28,9 @@ const HOST_MEMBER_KEYS = [
   'version',
 ];
 
+// `setConfig` joined the fake at v1.54 (desktop-pet-manager-page task
+// 4.5): the pet never calls it, but the fake mirrors the member-exact
+// runtime shape the 1.54 host constructs for the MAIN window too.
 function createFakePetRuntime(options: { throwGetConfig?: boolean } = {}) {
   const listeners: Array<(snapshot: PetFactsSnapshotLike) => void> = [];
   let configCalls = 0;
@@ -52,6 +55,11 @@ function createFakePetRuntime(options: { throwGetConfig?: boolean } = {}) {
     setPointerCapture: (_inside: boolean) => {},
     startDrag: () => {},
     requestAppExit: () => {},
+    async setConfig(_patch: {
+      enabled?: boolean;
+      currentPetId?: string | null;
+      opaqueFallback?: boolean;
+    }) {},
   };
   return {
     runtime,
@@ -68,7 +76,7 @@ function createFakePetRuntime(options: { throwGetConfig?: boolean } = {}) {
 function createFakeHost(options: { withPetRuntime?: boolean; throwGetConfig?: boolean } = {}) {
   const pet = createFakePetRuntime({ throwGetConfig: options.throwGetConfig });
   const host: Record<string, unknown> = {
-    version: '1.52.0',
+    version: '1.54.0',
     compat: { major: 1, minor: 51 },
     react: null, // activate() must never reach past petRuntime — dummies suffice
     ui: null,

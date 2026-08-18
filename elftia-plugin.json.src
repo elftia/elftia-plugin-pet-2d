@@ -1,15 +1,21 @@
 {
   "name": "pet-2d",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "kind": "app-extension",
   "displayName": "2D Desktop Pet",
-  "description": "A 2D desktop pet for Elftia: host activity facts drive a frozen 8-state grammar, rendered from machine-checkable character packs. Reference implementation of the desktop-pet character-pack contract.",
+  "description": "A 2D desktop pet for Elftia: host activity facts drive a frozen 8-state grammar, rendered from machine-checkable character packs. Reference implementation of the desktop-pet character-pack contract. v0.2 adds the main-window manager page (rail destination).",
   "contributes": {
     "pet": {
       "entry": "pet.mjs",
       "requiredMajor": 1,
       "requiredMinor": 52,
-      "builtAgainst": "1.52.0"
+      "builtAgainst": "1.54.0"
+    },
+    "renderer": {
+      "entry": "manager.mjs",
+      "requiredMajor": 1,
+      "requiredMinor": 54,
+      "builtAgainst": "1.54.0"
     }
   }
 }

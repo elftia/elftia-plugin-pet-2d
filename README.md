@@ -41,12 +41,40 @@ this repo — see NOTICE for the full policy and the gate that proves it.
 4. Enable the desktop-pet master switch (Settings → Desktop Pet). The pet
    window appears.
 
-**Known install-time gap (host follow-up, not worked around here):** the
-host does not re-resolve the current pet when a plugin is installed,
-uninstalled, or toggled — resolution happens on the master-switch config
-change and at window start. If you install this plugin while the pet window
-is already running, **toggle the desktop-pet master switch OFF then ON** to
-force a re-resolve.
+**Install-time re-scan (host ≥ 1.53):** every pet-management write —
+including a same-value patch — re-resolves pet contributors host-side
+(`pet:setConfig` calls `petWindow.refresh()` unconditionally), so a pet
+installed while the switch is already on surfaces without an OFF/ON dance
+(verified live: reinstall with the switch on keeps page, pack selection,
+ledger, and the pet window). On hosts **older than 1.53** the gap still
+applies: toggle the desktop-pet master switch OFF then ON to force a
+re-resolve.
+
+## The manager page (v0.2)
+
+**How do I get to the pet's settings?** Install the plugin, and the entry is
+the **rail item** — the pet's own icon in the app's left rail (labeled
+"2D Desktop Pet"), exactly like Design Studio. No settings sub-page hunting:
+the plugin ships a full main-window page (`contributes.renderer`) with:
+
+- **Master controls** — enable/disable the pet and the opaque-fallback
+  toggle, straight against the host config (the same store the Settings →
+  Desktop Pet section writes; either surface works).
+- **Gallery** — every installed character pack as a live animated preview;
+  click a card to switch packs (the running pet switches live via the
+  cross-window storage event — at most one preference-debounce (~0.5 s)
+  behind — and the choice survives window OFF/ON and app restarts).
+- **Growth ledger** — level/XP bar, stats, and the newest-first memory ring,
+  read live from the same store the pet window writes (refreshes on every
+  change). If you ship a ledger-less build, this section shows an honest
+  "ledger unavailable (trimmed)" card instead of breaking.
+- **Re-scan** — with no pet resolvable, the page offers a rescan row; an
+  empty management write is a legitimate re-scan request on 1.53 hosts.
+
+Locale limit: page copy ships in **en / zh / ja** only — other app locales
+resolve by `navigator.language` primary subtag and fall back to English.
+On hosts older than 1.53 the master controls degrade to an update-required
+card; the gallery and ledger stay functional (they are plugin-local).
 
 ## Docs
 
@@ -78,11 +106,13 @@ already handles every declared code slot).
 ## The ledger is trimmable
 
 The growth/companionship ledger (`src/ledger/`) is deliberately a deletable
-module: `src/pet.ts` reaches it through exactly one guarded dynamic import,
-and a pet without it is fully functional (companionship bookkeeping, not
-gameplay). To ship a ledger-less pet: delete `src/ledger/` and replace the
-one `await import('./ledger/createLedger')` expression in `src/pet.ts` with
-the stub shown in `scripts/verify-trim.mjs`. The proof that this works —
+module: exactly TWO guarded dynamic imports reach it — `src/pet.ts`'s
+`await import('./ledger/createLedger')` and the manager page's
+`import('../ledger/inspect')` (behind `LedgerPanel`'s loadable seam) — and a
+pet or page without it is fully functional (companionship bookkeeping, not
+gameplay; the page renders its honest unavailable card). To ship a
+ledger-less pet: delete `src/ledger/` and replace those two expressions with
+the stubs shown in `scripts/verify-trim.mjs`. The proof that this works —
 typecheck, the full test suite, and a build in a copy with the ledger
 deleted, plus the assertion that no ledger symbols survive in the bundle —
 runs as part of `npm run verify` (`verify:trim`).

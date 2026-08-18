@@ -3,7 +3,8 @@ import { defineConfig } from 'vitest/config';
 // Two projects: most of src/ (contracts, brain, ledger, packs, state) is
 // plain TS logic tested under `node`; the DOM-touching modules — src/render/*
 // (canvas hit-test, stage mounting), src/interact/* (menu/pointer wiring),
-// and src/pet.ts itself (the composition root mounts a real stage) — need
+// and src/pet.ts itself (the composition root mounts a real stage), plus
+// src/manager/** (the page reads localStorage + navigator.language) — need
 // `jsdom`. Split rather than running everything under jsdom, which is slower
 // and hides DOM-availability bugs in the non-DOM modules.
 export default defineConfig({
@@ -21,7 +22,7 @@ export default defineConfig({
           name: 'node',
           environment: 'node',
           include: ['src/**/__tests__/**/*.test.ts'],
-          exclude: ['src/render/**', 'src/interact/**', 'src/__tests__/**'],
+          exclude: ['src/render/**', 'src/interact/**', 'src/manager/**', 'src/__tests__/**'],
         },
       },
       {
@@ -31,6 +32,7 @@ export default defineConfig({
           include: [
             'src/render/**/__tests__/**/*.test.ts',
             'src/interact/**/__tests__/**/*.test.ts',
+            'src/manager/**/__tests__/**/*.test.ts',
             'src/__tests__/*.test.ts',
           ],
         },

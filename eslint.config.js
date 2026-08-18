@@ -22,12 +22,15 @@ export default [
     // NOT part of the tsconfig program (no `allowJs`), so it gets its own,
     // non-project-aware block below instead of failing ESLint's "file not
     // found in project" check.
-    files: ['src/**/*.ts', 'scripts/**/*.ts'],
+    // .tsx joined at v0.2 (the manager page): JSX parsing on for the
+    // source tree via ecmaFeatures below.
+    files: ['src/**/*.ts', 'src/**/*.tsx', 'scripts/**/*.ts'],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
         project: './tsconfig.json',
         sourceType: 'module',
+        ecmaFeatures: { jsx: true },
       },
     },
     plugins: {
@@ -74,7 +77,10 @@ export default [
       'src/state/**/*.ts',
       'src/ledger/**/*.ts',
       'src/interact/**/*.ts',
+      'src/manager/**/*.ts',
+      'src/manager/**/*.tsx',
       'src/__tests__/**/*.ts',
+      'src/__tests__/**/*.tsx',
       'src/pet.ts',
     ],
     languageOptions: {
@@ -116,7 +122,7 @@ export default [
     },
   },
   {
-    files: ['src/**/*.ts'],
+    files: ['src/**/*.ts', 'src/**/*.tsx'],
     ignores: ['src/**/__tests__/**', 'src/**/*.test.ts'],
     rules: {
       'max-lines': [

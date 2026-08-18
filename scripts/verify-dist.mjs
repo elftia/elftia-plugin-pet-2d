@@ -13,10 +13,12 @@
 //      silent: `plugin://` 404s the entry ⇒ an empty pet window, no error.
 //   2. ENTRY PRESENCE — `renderer/pet.mjs` and BOTH shipped pack modules
 //      (`characters/<id>/pack.mjs`, derived from `packs-src/`) exist.
-//   3. NO SURVIVING EXTERNAL SPECIFIER — no static `import`/`export … from`
-//      in any shipped .mjs names a `node:` or bare specifier: the pet
-//      window has no node_modules to resolve against, so such an import
-//      would 500 at load time. Relative/URL specifiers are fine.
+//   3. NO SURVIVING EXTERNAL SPECIFIER — per-entry (v0.2, task 4.3/9.1):
+//      `pet.mjs` + pack modules still allow ZERO bare specifiers (the pet
+//      window has no node_modules AND no import map); `manager.mjs` may
+//      import exactly the import-map set the MAIN window installs
+//      (`installHostModuleImportMap`: react, react-dom, react-dom/client,
+//      react/jsx-runtime, react-router-dom). Anything else fails.
 //   4. FIXTURE EXCLUSION — task 8.7's checker (`verify-no-fixture-bytes`)
 //      runs HERE, on every build, not once: whale-girl art (ZipZipPipe's IP)
 //      must never reach dist/. In a fixtures-stripped checkout this half
@@ -116,6 +118,12 @@ if (contributions.pet === undefined && contributions.renderer === undefined) {
 if (!fs.existsSync(path.join(rendererDir, 'pet.mjs'))) {
   fail('renderer/pet.mjs missing — the vite build step did not emit the entry');
 }
+if (contributions.renderer !== undefined) {
+  if (!fs.existsSync(path.join(rendererDir, 'manager.mjs'))) {
+    fail('renderer/manager.mjs missing — the manager vite build step did not emit the entry');
+  }
+  console.log('verify-dist: PASS — renderer/manager.mjs present');
+}
 if (!fs.existsSync(packsSrcDir)) {
   fail('packs-src/ missing — cannot derive the expected pack list');
 }
@@ -144,8 +152,8 @@ const IMPORT_RE = /\bimport\s*(?:[\w$*{},\s]*?\bfrom\s*)?['"]([^'"]+)['"]/g;
 const EXPORT_FROM_RE = /\bexport\s+(?:\*(?:\s+as\s+[\w$]+)?|\{[^}]*\})\s*from\s*['"]([^'"]+)['"]/g;
 
 /** A specifier is fine when relative, root-relative, or a URL scheme —
- * everything else (node:, bare package names) cannot resolve in the pet
- * window and must not survive the bundle. */
+ * everything else (node:, bare package names) needs a resolver and must not
+ * survive the bundle unaccounted for. */
 function isAllowedSpecifier(specifier) {
   return (
     specifier.startsWith('./') ||
@@ -155,21 +163,47 @@ function isAllowedSpecifier(specifier) {
   );
 }
 
+/** The bare specifiers the MAIN window resolves for a renderer entry via
+ * the host import map (`installHostModuleImportMap`). Exactly the set the
+ * manager vite pass marks external — a new external must be added to BOTH
+ * or this gate fails. */
+const IMPORT_MAP_SET = new Set([
+  'react',
+  'react-dom',
+  'react-dom/client',
+  'react/jsx-runtime',
+  'react-router-dom',
+]);
+
+/** Per-entry bare-specifier allowance: only the main-window renderer entry
+ * gets the import-map set; pet.mjs and pack modules get none (the pet
+ * window installs no import map — a bare import there 500s at load). */
+function allowedBareSpecifiers(file) {
+  const rel = path.relative(rendererDir, file).split(path.sep).join('/');
+  if (rel === 'manager.mjs') return IMPORT_MAP_SET;
+  return new Set();
+}
+
 for (const file of walk(distDir).filter((f) => f.toLowerCase().endsWith('.mjs'))) {
   const code = fs.readFileSync(file, 'utf8');
   const rel = path.relative(repoRoot, file);
   for (const re of [IMPORT_RE, EXPORT_FROM_RE]) {
+    const allowedBare = allowedBareSpecifiers(file);
     re.lastIndex = 0;
     let match = re.exec(code);
     while (match !== null) {
-      if (!isAllowedSpecifier(match[1])) {
-        fail(`${rel} contains an unresolvable specifier "${match[1]}" — the pet window has no node_modules`);
+      if (!isAllowedSpecifier(match[1]) && !allowedBare.has(match[1])) {
+        fail(
+          `${rel} contains an unresolvable specifier "${match[1]}" — not relative/URL and outside the entry's bare allowance (import-map set)`
+        );
       }
       match = re.exec(code);
     }
   }
 }
-console.log('verify-dist: PASS — no node:/bare static specifier survives in any shipped .mjs');
+console.log(
+  'verify-dist: PASS — bare static specifiers are within the per-entry allowance (pet/packs: none; manager: import-map set)'
+);
 
 // --- 4) fixture exclusion (8.7, every build) -----------------------------------
 

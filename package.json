@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "elftia-plugin-pet-2d",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "2D desktop pet plugin for Elftia — facts->state grammar, sprite player, character-pack contract, whale-girl-format compatibility.",
   "type": "module",
   "license": "MIT",
@@ -12,7 +12,7 @@
     "lint": "eslint .",
     "test": "vitest run",
     "build:packs": "tsx scripts/build-packs.ts",
-    "build": "tsx scripts/build-packs.ts && vite build --config vite.plugin.config.ts && node scripts/stamp-manifest.mjs && node scripts/verify-dist.mjs",
+    "build": "tsx scripts/build-packs.ts && vite build --config vite.plugin.config.ts && vite build --config vite.plugin.manager.config.ts && node scripts/stamp-manifest.mjs && node scripts/verify-dist.mjs",
     "verify:packs": "tsx scripts/verify-packs.ts",
     "verify:dist": "node scripts/verify-dist.mjs",
     "verify:no-fixture-bytes": "node scripts/verify-no-fixture-bytes.mjs",

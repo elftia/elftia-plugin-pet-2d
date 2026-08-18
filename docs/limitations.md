@@ -75,6 +75,26 @@ from a plugin.
   vice versa. (Inherent to `localStorage`; a host-owned storage port would
   be the fix, and is not in v1.)
 
+## Manager page (v0.2)
+
+- **Config freshness is pull-on-focus.** There is no config push port: the
+  page re-reads `petRuntime.getConfig()` on mount, on window focus, and on
+  visibility→visible. A config change made elsewhere (the Settings section,
+  or another window) while the page sits in a background tab appears when
+  you next focus the tab — not instantly. Every WRITE re-reads immediately,
+  so the page's own toggles never show stale state.
+- **Hosts < 1.53 get a degraded page, not a broken one.** Without
+  `petRuntime.setConfig` the master controls are replaced by an
+  update-required card; the gallery, pack switching, and the ledger stay
+  fully functional because they are plugin-local (prefs/ledger read the
+  main-window localStorage, same origin as the pet window in both dev and
+  packaged layouts — the ledger's dev-vs-packaged origin split applies to
+  the page identically).
+- **The ledger panel is only as live as the pet window's writer.** It
+  refreshes on `storage` events for the ledger key; the pet window
+  debounces its writes ≤ 1 s, so the panel trails real accrual by at most
+  one debounce window plus the event dispatch.
+
 ## Scope
 
 - **2D sprite packs only.** The contract (and this reference
