@@ -1,0 +1,107 @@
+{
+  "apiVersion": 1,
+  "id": "elf-blob",
+  "name": "Elf Blob",
+  "credit": "ATELIER AI",
+  "license": "CC0-1.0",
+  "meta": {
+    "frameSize": 256,
+    "stageScale": 1
+  },
+  "states": {
+    "idle": {
+      "sheet": "idle.svg",
+      "frames": 3,
+      "fps": 2,
+      "playback": "blink"
+    },
+    "working": {
+      "sheet": "working.svg",
+      "frames": 3,
+      "fps": 3,
+      "playback": "loop"
+    },
+    "celebrate": {
+      "sheet": "celebrate.svg",
+      "frames": 3,
+      "fps": 4,
+      "playback": "loop"
+    },
+    "error": {
+      "sheet": "error.svg",
+      "frames": 2,
+      "fps": 8,
+      "playback": "once",
+      "motion": "shake"
+    },
+    "disappointed": {
+      "sheet": "disappointed.svg",
+      "frames": 2,
+      "fps": 2,
+      "playback": "loop"
+    },
+    "joy": {
+      "sheet": "joy.svg",
+      "frames": 2,
+      "fps": 5,
+      "playback": "loop"
+    },
+    "eat": {
+      "sheet": "eat.svg",
+      "frames": 3,
+      "fps": 8,
+      "playback": "loop"
+    },
+    "play": {
+      "sheet": "play.svg",
+      "frames": 3,
+      "fps": 4,
+      "playback": "loop"
+    },
+    "drag": {
+      "sheet": "drag.svg",
+      "frames": 1,
+      "fps": 5,
+      "playback": "loop",
+      "motion": "tilt"
+    },
+    "walk": {
+      "sheet": "walk.svg",
+      "frames": 3,
+      "fps": 6,
+      "playback": "pingpong"
+    },
+    "sleep": {
+      "sheet": "sleep.svg",
+      "frames": 2,
+      "fps": 1,
+      "playback": "loop"
+    },
+    "wake": {
+      "sheet": "wake.svg",
+      "frames": 2,
+      "fps": 3,
+      "playback": "once"
+    },
+    "welcome": {
+      "sheet": "welcome.svg",
+      "frames": 2,
+      "fps": 3,
+      "playback": "loop"
+    },
+    "think": {
+      "sheet": "think.svg",
+      "frames": 1,
+      "fps": 2,
+      "playback": "loop",
+      "motion": "float"
+    },
+    "wait": {
+      "sheet": "wait.svg",
+      "frames": 1,
+      "fps": 2,
+      "playback": "loop",
+      "motion": "wiggle"
+    }
+  }
+}

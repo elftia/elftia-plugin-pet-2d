@@ -1,0 +1,178 @@
+<!doctype html>
+<title>pet-surface-spike / item-1</title>
+<canvas id="c" width="4" height="4" style="display:none"></canvas>
+<script>
+  const cspViolations = [];
+  document.addEventListener('securitypolicyviolation', (e) => {
+    cspViolations.push({
+      directive: e.violatedDirective,
+      blockedURI: e.blockedURI,
+      disposition: e.disposition,
+      sample: e.sample || null,
+    });
+  });
+  window.__cspViolations = cspViolations;
+
+  function canvasReadable(img) {
+    try {
+      const c = document.getElementById('c');
+      const ctx = c.getContext('2d');
+      ctx.clearRect(0, 0, 4, 4);
+      ctx.drawImage(img, 0, 0, 4, 4);
+      ctx.getImageData(0, 0, 1, 1);
+      return { readable: true };
+    } catch (e) {
+      return { readable: false, error: `${e.name}: ${e.message}` };
+    }
+  }
+
+  function loadImg(src, timeoutMs = 4000) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      const t = setTimeout(() => resolve({ loaded: false, error: 'timeout' }), timeoutMs);
+      img.onload = () => {
+        clearTimeout(t);
+        resolve({ loaded: true, img });
+      };
+      img.onerror = () => {
+        clearTimeout(t);
+        resolve({ loaded: false, error: 'img onerror' });
+      };
+      img.src = src;
+    });
+  }
+
+  // (a) direct <img src="plugin://...">
+  async function candidateA() {
+    const r = await loadImg('plugin://fixture/sheet.png');
+    if (!r.loaded) return { load: false, error: r.error };
+    return { load: true, ...canvasReadable(r.img) };
+  }
+
+  // (b) fetch() -> blob -> <img>. connect-src has no plugin: token, so this
+  // is predicted to fail at the fetch() call itself.
+  async function candidateB() {
+    try {
+      const resp = await fetch('plugin://fixture/sheet.png');
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const r = await loadImg(url);
+      if (!r.loaded) return { fetchOk: true, load: false, error: r.error };
+      return { fetchOk: true, load: true, ...canvasReadable(r.img) };
+    } catch (e) {
+      return { fetchOk: false, load: false, error: `${e.name}: ${e.message}` };
+    }
+  }
+
+  // (c) dynamic import of a JSON module carrying a base64 field.
+  async function candidateC() {
+    try {
+      const mod = await import('plugin://fixture/sheets.json', { with: { type: 'json' } });
+      const dataUri = `data:image/png;base64,${mod.default.sheet.base64}`;
+      const r = await loadImg(dataUri);
+      if (!r.loaded) return { importOk: true, load: false, error: r.error };
+      return { importOk: true, load: true, ...canvasReadable(r.img) };
+    } catch (e) {
+      return { importOk: false, load: false, error: `${e.name}: ${e.message}` };
+    }
+  }
+
+  // (d) dynamic import of an ESM module exporting a data URI string directly.
+  async function candidateD() {
+    try {
+      const mod = await import('plugin://fixture/pack.mjs');
+      const dataUri = mod.default;
+      const r = await loadImg(dataUri);
+      if (!r.loaded) return { importOk: true, load: false, error: r.error };
+      return { importOk: true, load: true, ...canvasReadable(r.img) };
+    } catch (e) {
+      return { importOk: false, load: false, error: `${e.name}: ${e.message}` };
+    }
+  }
+
+  // Negative control: connect-src is 'self' only (no https: token). A
+  // cross-origin fetch from this plugin:// page must be blocked by CSP
+  // regardless of network reachability, proving the CSP is actually being
+  // enforced (and not just silently absent) rather than every candidate
+  // above passing because nothing is stamped at all.
+  async function negativeControlCrossOriginFetch() {
+    try {
+      await fetch('https://example.invalid/should-be-csp-blocked.png');
+      return { blocked: false, note: 'fetch did not throw — CSP NOT enforced or self exempted it' };
+    } catch (e) {
+      return { blocked: true, error: `${e.name}: ${e.message}` };
+    }
+  }
+
+  window.__runTransports = async function runTransports() {
+    const transports = {};
+    transports.a = await candidateA();
+    transports.b = await candidateB();
+    transports.c = await candidateC();
+    transports.d = await candidateD();
+    const negativeControl = await negativeControlCrossOriginFetch();
+    return { transports, negativeControl, cspViolations: window.__cspViolations };
+  };
+
+  // Clock test (item 2): setInterval + setTimeout-chain + CSS @keyframes,
+  // run on demand from the main process so each condition (focused /
+  // unfocused / fullscreen-in-front) can be windowed precisely.
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes spike-spin { from { transform: translateX(0px); } to { transform: translateX(100px); } }
+    #anim { position: fixed; top: 0; left: 0; width: 8px; height: 8px; background: red;
+            animation: spike-spin 4s linear infinite; }
+  `;
+  document.head.appendChild(style);
+  const animEl = document.createElement('div');
+  animEl.id = 'anim';
+  document.body.appendChild(animEl);
+
+  function readAnimX() {
+    const t = getComputedStyle(animEl).transform;
+    if (!t || t === 'none') return 0;
+    const m = /matrix\(([^)]+)\)/.exec(t);
+    if (!m) return 0;
+    const parts = m[1].split(',').map((s) => parseFloat(s.trim()));
+    return parts[4] || 0;
+  }
+
+  window.__runClockTest = function runClockTest(durationMs) {
+    return new Promise((resolve) => {
+      const start = performance.now();
+      let intervalTicks = 0;
+      const expectedTicks = Math.floor(durationMs / 125);
+      const cssample = [];
+      const iv = setInterval(() => {
+        intervalTicks++;
+      }, 125);
+
+      let timeoutTicks = 0;
+      let timeoutStop = false;
+      function chainStep() {
+        if (timeoutStop) return;
+        timeoutTicks++;
+        setTimeout(chainStep, 125);
+      }
+      setTimeout(chainStep, 125);
+
+      const cssIv = setInterval(() => {
+        cssample.push({ t: performance.now() - start, x: readAnimX() });
+      }, 500);
+
+      setTimeout(() => {
+        clearInterval(iv);
+        timeoutStop = true;
+        clearInterval(cssIv);
+        const elapsed = performance.now() - start;
+        resolve({
+          elapsedMs: elapsed,
+          expectedTicks,
+          intervalTicks,
+          timeoutTicks,
+          cssSamples: cssample,
+        });
+      }, durationMs);
+    });
+  };
+</script>

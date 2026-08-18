@@ -1,0 +1,33 @@
+NOTICE
+======
+
+This repository (elftia-plugin-pet-2d) is MIT-licensed — see LICENSE. It
+ships TWO original character packs (`packs-src/elf-blob`, `packs-src/tin-bot`)
+drawn from scratch for this repo; no third-party character art is
+distributed in `dist/`.
+
+Third-party fixture (DEV/TEST ONLY — never distributed)
+---------------------------------------------------------
+
+`fixtures/whale-girl/` contains a **local development and test fixture**
+copied from the `whale-girl` project, used only to prove
+`src/packs/whaleGirlCompat.ts` against a real whale-girl-format pack and to
+run this repo's own test suite. It is never imported by `src/` at runtime,
+never referenced by `elftia-plugin.json`, and is asserted absent from every
+build output by `scripts/verify-no-fixture-bytes.mjs` (task 8.7) — see that
+script's gate for the proof, not just this notice, before trusting a build.
+
+- Software (whale-girl project itself, incl. its manifest JSON format):
+  MIT License, Copyright (c) 2026 Sam Gao (vlln).
+  Source: https://github.com/vlln/whale-girl
+
+- Character ("鲸鱼娘" / whale-girl the character, the sprite artwork itself):
+  created by ZipZipPipe (https://space.bilibili.com/4168597). The character
+  design is ZipZipPipe's intellectual property, distinct from and NOT
+  covered by whale-girl-the-software's MIT license. No sprite art, no PNG
+  bytes, and no pixel data derived from this fixture is redistributed by
+  this repository in any form.
+
+If you fork this repository for public distribution, DELETE
+`fixtures/whale-girl/` first — it is a local-only development aid, not part
+of the shipped product.

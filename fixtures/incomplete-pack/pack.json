@@ -1,0 +1,97 @@
+{
+  "apiVersion": 1,
+  "id": "incomplete-pack",
+  "name": "Incomplete Pack (deliberately broken fixture)",
+  "credit": "ATELIER AI",
+  "license": "CC0-1.0",
+  "meta": {
+    "frameSize": 256,
+    "stageScale": 1
+  },
+  "states": {
+    "idle": {
+      "sheet": "idle.svg",
+      "frames": 1,
+      "fps": 2,
+      "playback": "loop"
+    },
+    "working": {
+      "sheet": "working.svg",
+      "frames": 1,
+      "fps": 2,
+      "playback": "loop"
+    },
+    "celebrate": {
+      "sheet": "celebrate.svg",
+      "frames": 1,
+      "fps": 2,
+      "playback": "loop"
+    },
+    "error": {
+      "sheet": "error.svg",
+      "frames": 1,
+      "fps": 2,
+      "playback": "loop"
+    },
+    "disappointed": {
+      "sheet": "disappointed.svg",
+      "frames": 1,
+      "fps": 2,
+      "playback": "loop"
+    },
+    "joy": {
+      "sheet": "joy.svg",
+      "frames": 1,
+      "fps": 2,
+      "playback": "loop"
+    },
+    "eat": {
+      "sheet": "eat.svg",
+      "frames": 1,
+      "fps": 2,
+      "playback": "loop"
+    },
+    "play": {
+      "sheet": "play.svg",
+      "frames": 1,
+      "fps": 2,
+      "playback": "loop"
+    },
+    "drag": {
+      "sheet": "drag.svg",
+      "frames": 1,
+      "fps": 2,
+      "playback": "loop"
+    },
+    "walk": {
+      "sheet": "walk.svg",
+      "frames": 1,
+      "fps": 2,
+      "playback": "loop"
+    },
+    "sleep": {
+      "sheet": "sleep.svg",
+      "frames": 1,
+      "fps": 2,
+      "playback": "loop"
+    },
+    "wake": {
+      "sheet": "wake.svg",
+      "frames": 1,
+      "fps": 2,
+      "playback": "loop"
+    },
+    "welcome": {
+      "sheet": "welcome.svg",
+      "frames": 1,
+      "fps": 2,
+      "playback": "loop"
+    },
+    "think": {
+      "sheet": "think.svg",
+      "frames": 1,
+      "fps": 2,
+      "playback": "loop"
+    }
+  }
+}

@@ -1,0 +1,28 @@
+<!doctype html>
+<title>pet-surface-spike / item-3</title>
+<style>
+  html,
+  body {
+    background: transparent !important;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+  /* Frame 0 of the real 3-frame whale-girl idle strip (768x256), stage 1:1
+     with frameSize so no resampling is introduced by the spike itself.
+     Served same-origin (host `fixture`, aliased path) — see the provenance
+     comment on the `real-idle.png` branch in pet-surface-spike.mjs: a real
+     character pack ships its images under the SAME plugin host as its HTML,
+     so this is the representative test; a genuinely cross-plugin-host load
+     (`plugin://real/idle.png`) is CSP-blocked by img-src and is exercised
+     separately as its own finding, not used here. */
+  #stage {
+    width: 256px;
+    height: 256px;
+    background-image: url('plugin://fixture/real-idle.png');
+    background-size: 768px 256px;
+    background-position: 0px 0px;
+    background-repeat: no-repeat;
+  }
+</style>
+<div id="stage"></div>

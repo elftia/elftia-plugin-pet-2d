@@ -1,0 +1,15 @@
+{
+  "name": "pet-2d",
+  "version": "0.1.0",
+  "kind": "app-extension",
+  "displayName": "2D Desktop Pet",
+  "description": "A 2D desktop pet for Elftia: host activity facts drive a frozen 8-state grammar, rendered from machine-checkable character packs. Reference implementation of the desktop-pet character-pack contract.",
+  "contributes": {
+    "pet": {
+      "entry": "pet.mjs",
+      "requiredMajor": 1,
+      "requiredMinor": 51,
+      "builtAgainst": "1.51.0"
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "types": [],
+    "paths": {
+      // Points at HOST_WT's plugin-types source directly (task 2.3 / OQ6):
+      // this repo has no npm dependency on the host, and HOST_WT is a
+      // sibling worktree, not a published package. Retarget to a real
+      // `@elftia/plugin-types` npm dependency once the portfolio ships and
+      // plugin-types is published/vendored for third-party pack authors —
+      // that retarget is OQ6, not decided here.
+      "@elftia/plugin-types": [
+        "../elftia-wt-pet/packages/plugin-types/src/index.ts"
+      ],
+      // Transitive only: plugin-types itself imports @elftia/agent-spec
+      // (host-api/backend-services.ts, backend-transport.ts). This repo
+      // never imports agent-spec directly — this mapping exists purely so
+      // plugin-types resolves at all, mirroring the same paths pattern the
+      // host's own packages/desktop and packages/server tsconfigs use.
+      "@elftia/agent-spec": ["../elftia-wt-pet/packages/agent-spec/src/index.ts"],
+      "@elftia/agent-spec/*": ["../elftia-wt-pet/packages/agent-spec/src/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "scripts/**/*.ts", "vite.plugin.config.ts", "vitest.config.ts"],
+  "exclude": ["dist", "node_modules", "fixtures", "packs-src"]
+}
