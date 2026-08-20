@@ -1,6 +1,8 @@
 // Flat ESLint config for elftia-plugin-pet-2d. Parser/plugins are resolved
-// through the node_modules JUNCTION into the host Elftia repo (see
-// package.json's zero-installs note) — this repo never runs `npm install`.
+// from this repo's OWN `node_modules`: every build dependency is declared in
+// `package.json` and pinned by `package-lock.json`, so `npm ci` reproduces
+// the toolchain anywhere. (This used to read through a junction into the host
+// Elftia repo — the producer could not be built from a standalone clone.)
 //
 // max-lines is the file-size gate this repo's own tasks.md commits to
 // (400 warn-and-split; there is no separate hard-cap tier here, unlike the

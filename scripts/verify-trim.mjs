@@ -4,11 +4,14 @@
 //
 // What it does, in order:
 //   1. Copies the repo (minus node_modules / dist / .git) to a TEMP
-//      DIRECTORY NEXT TO THE REPO — a sibling, not os.tmpdir(), because
-//      tsconfig.json's `paths` map @elftia/plugin-types at the relative
-//      "../elftia-wt-pet/..." and a sibling copy keeps that resolving.
-//   2. Junctions node_modules into the copy (zero-install discipline: this
-//      repo never runs npm install).
+//      DIRECTORY NEXT TO THE REPO — a sibling rather than os.tmpdir() to keep
+//      the copy on the same volume as the repo (the junction in step 2 cannot
+//      cross some volume/permission boundaries, and %TEMP% is a known
+//      antivirus-staging tripwire on Windows).
+//   2. Junctions node_modules into the copy — pointing at THIS REPO'S OWN
+//      installed node_modules (realpath of ./node_modules), so the trimmed
+//      copy uses exactly the pinned toolchain instead of re-installing 300
+//      packages per proof run. Nothing outside the repo is referenced.
 //   3. rm -rf src/ledger (the deletion under test).
 //   4. Stubs BOTH dynamic-import seams — the only lines in the tree that
 //      can reference the deleted module: pet.ts's `createLedger` seam

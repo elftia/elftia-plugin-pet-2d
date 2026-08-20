@@ -16,8 +16,8 @@
  *
  * Both paths share `scripts/lib/buildPack.ts`: resolve sheets, measure real
  * dimensions, run `validateCharacterPack` (a pack that builds is a pack that
- * validates), inline as data URIs. Zero installs: `tsx` comes from the
- * node_modules junction into the host repo.
+ * validates), inline as data URIs. `tsx` is a declared devDependency of this
+ * repo, resolved from its own node_modules.
  */
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute, join, resolve, sep } from 'node:path';

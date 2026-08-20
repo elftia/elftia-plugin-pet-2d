@@ -17,25 +17,16 @@
     // DS renderer setup.
     "jsx": "react-jsx",
     "verbatimModuleSyntax": true,
-    "types": [],
-    "paths": {
-      // Points at HOST_WT's plugin-types source directly (task 2.3 / OQ6):
-      // this repo has no npm dependency on the host, and HOST_WT is a
-      // sibling worktree, not a published package. Retarget to a real
-      // `@elftia/plugin-types` npm dependency once the portfolio ships and
-      // plugin-types is published/vendored for third-party pack authors —
-      // that retarget is OQ6, not decided here.
-      "@elftia/plugin-types": [
-        "../elftia-wt-pet/packages/plugin-types/src/index.ts"
-      ],
-      // Transitive only: plugin-types itself imports @elftia/agent-spec
-      // (host-api/backend-services.ts, backend-transport.ts). This repo
-      // never imports agent-spec directly — this mapping exists purely so
-      // plugin-types resolves at all, mirroring the same paths pattern the
-      // host's own packages/desktop and packages/server tsconfigs use.
-      "@elftia/agent-spec": ["../elftia-wt-pet/packages/agent-spec/src/index.ts"],
-      "@elftia/agent-spec/*": ["../elftia-wt-pet/packages/agent-spec/src/*"]
-    }
+    // NO `paths` (OQ6, settled): `@elftia/plugin-types` resolves as an
+    // ordinary devDependency out of this repo's OWN node_modules. It used to
+    // be mapped at a sibling host worktree's source tree, which made the
+    // producer un-buildable anywhere that checkout was absent (it WAS absent
+    // — every `@elftia/plugin-types` import was a TS2307). The contract now
+    // arrives as a normal package, so a third-party pack author gets the same
+    // resolution the maintainers do. `@elftia/agent-spec` (plugin-types' peer,
+    // referenced only transitively from its .d.ts) is declared for the same
+    // reason. Both resolve from the public npm registry.
+    "types": []
   },
   "include": [
     "src/**/*.ts",

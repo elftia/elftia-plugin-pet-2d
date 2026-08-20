@@ -3,6 +3,18 @@
 // truth from the SHIPPED bytes (not from the source tree), because this is
 // the step that stands between "built" and "installable".
 //
+//   0. STRUCTURAL GATE — before anything semantic, the tree must BE an
+//      ordinary tree: no symlink/junction at any depth, no special files
+//      (FIFOs, sockets, devices), no reparse target escaping dist/pet-2d/,
+//      and no `node_modules` path segment at ANY depth. These are the
+//      unified-producer invariants (docs/dev/15_unified_plugin_producer.md
+//      §4/§11) and they are what `elftia-plugin verify|pack|release` also
+//      fails closed on — checked here too so `npm run build` refuses to
+//      leave such a tree behind in the first place, rather than deferring
+//      the discovery to release time. Note the ordinary `walk()` below
+//      SKIPS a symlink dirent silently (it is neither isFile nor
+//      isDirectory), so without this pass a junction would be invisible to
+//      every later assertion.
 //   1. CHECKSUM RECOMPUTE — every declared code entry's sha512 is recomputed
 //      over the shipped file and must equal the manifest's `checksum`
 //      (encoding-tolerant, mirroring the host's `checksumsMatch`). This is
@@ -71,6 +83,74 @@ function checksumMatches(declared, actualBase64, actualHex) {
   if (stripped === actualBase64) return true;
   return stripped.toLowerCase() === actualHex;
 }
+
+// --- 0) structural gate over the shipped tree --------------------------------
+//
+// Runs FIRST: every later assertion reads bytes out of this tree, and a
+// symlink/junction is exactly the thing that makes "the bytes I verified" and
+// "the bytes that ship" diverge. `walk()` cannot see one (a symlink dirent is
+// neither isFile nor isDirectory, so it is silently skipped), so the check has
+// to lstat every entry itself.
+
+/** `path.relative`-based containment, so a reparse point whose target sits
+ * outside dist/pet-2d/ is rejected even when the lexical path looks fine. */
+function isContainedPath(root, candidate) {
+  const relative = path.relative(root, candidate);
+  return (
+    relative === '' ||
+    (!relative.startsWith(`..${path.sep}`) && relative !== '..' && !path.isAbsolute(relative))
+  );
+}
+
+function assertOrdinaryTree(root) {
+  if (!fs.existsSync(root)) {
+    fail('dist/pet-2d missing — run the build before verify-dist');
+  }
+  const rootState = fs.lstatSync(root);
+  if (!rootState.isDirectory() || rootState.isSymbolicLink()) {
+    fail('dist/pet-2d must be an ordinary directory, not a symlink, junction, or reparse point');
+  }
+  const realRoot = fs.realpathSync(root);
+  let fileCount = 0;
+
+  const visit = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      const rel = path.relative(root, full).split(path.sep).join('/');
+
+      if (entry.name === 'node_modules') {
+        fail(
+          `node_modules is forbidden at any depth in the install tree: ${rel} — JS dependencies must be BUNDLED into the shipped entries, never shipped as a dependency tree`
+        );
+      }
+      const state = fs.lstatSync(full);
+      if (state.isSymbolicLink()) {
+        fail(
+          `symlink or junction is forbidden in the install tree: ${rel} — the host installs bytes, and a link would either dangle or escape the package`
+        );
+      }
+      const physical = fs.realpathSync(full);
+      if (!isContainedPath(realRoot, physical)) {
+        fail(`reparse escape is forbidden: ${rel} resolves to ${physical}, outside dist/pet-2d`);
+      }
+      if (state.isDirectory()) {
+        visit(full);
+      } else if (state.isFile()) {
+        fileCount += 1;
+      } else {
+        fail(`special file is forbidden in the install tree: ${rel} (not a regular file or directory)`);
+      }
+    }
+  };
+
+  visit(root);
+  return fileCount;
+}
+
+const structuralFileCount = assertOrdinaryTree(distDir);
+console.log(
+  `verify-dist: PASS — structural gate over ${structuralFileCount} files (ordinary tree; no symlink/junction, special file, reparse escape, or node_modules segment)`
+);
 
 // --- 1) checksums over the shipped tree ------------------------------------
 
@@ -225,7 +305,8 @@ for (const file of walk(distDir).filter((f) => f.toLowerCase().endsWith('.mjs'))
 // EXACTLY the host-provided external set (archiver among them). Any other
 // bare require would MODULE_NOT_FOUND at plugin-boot time and the whole verb
 // table would silently never register — tsc/vitest cannot see this (they
-// resolve through the junction), so the gate lives HERE, over shipped bytes.
+// resolve against this repo's own node_modules, which the HOST does not
+// have), so the gate lives HERE, over shipped bytes.
 // A new external must be added to BOTH the vite main pass and this allowlist
 // (mirroring the manager's import-map rule).
 const REQUIRE_RE = /\brequire\s*\(\s*['"]([^'"]+)['"]\s*\)/g;

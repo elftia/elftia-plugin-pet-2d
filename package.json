@@ -5,9 +5,32 @@
   "description": "2D desktop pet plugin for Elftia — facts->state grammar, sprite player, character-pack contract, whale-girl-format compatibility.",
   "type": "module",
   "license": "MIT",
-  "dependencies": {},
   "devDependencies": {
-    "adm-zip": "^0.5.16"
+    "@elftia/agent-spec": "^1.26.0",
+    "@elftia/plugin-kit": "^0.1.0",
+    "@elftia/plugin-types": "^1.46.0",
+    "@eslint/js": "^9.39.2",
+    "@types/adm-zip": "^0.5.7",
+    "@types/archiver": "^5.3.4",
+    "@types/node": "^22.19.3",
+    "@types/react": "^18.3.27",
+    "@types/react-dom": "^18.3.7",
+    "@typescript-eslint/eslint-plugin": "^8.54.0",
+    "@typescript-eslint/parser": "^8.54.0",
+    "adm-zip": "^0.5.16",
+    "archiver": "^5.3.2",
+    "electron": "^40.1.0",
+    "eslint": "^9.39.2",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "globals": "^14.0.0",
+    "jsdom": "^24.1.3",
+    "pngjs": "^5.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.0",
+    "vitest": "^4.0.16"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
@@ -19,7 +42,10 @@
     "verify:dist": "node scripts/verify-dist.mjs",
     "verify:no-fixture-bytes": "node scripts/verify-no-fixture-bytes.mjs",
     "verify:trim": "node scripts/verify-trim.mjs",
-    "verify": "npm run typecheck && npm run lint && npm test && npm run verify:packs && npm run build && npm run verify:trim",
+    "verify:plugin": "elftia-plugin verify dist/pet-2d",
+    "pack": "elftia-plugin pack dist/pet-2d --out .elftia-work/pack",
+    "release": "elftia-plugin release dist/pet-2d --out release",
+    "verify": "npm run typecheck && npm run lint && npm test && npm run verify:packs && npm run build && npm run verify:trim && npm run verify:plugin && npm run release",
     "spike": "electron scripts/spike/pet-surface-spike.mjs"
   }
 }

@@ -1,5 +1,7 @@
 node_modules/
 dist/
+release/
+.elftia-work/
 *.log
 .tmp*
 scripts/spike/out/

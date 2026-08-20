@@ -1,7 +1,7 @@
 /**
  * Dev-only, Node-side (NOT Electron) helper for spike item ③. Decodes the
  * REAL whale-girl `idle.png` (frame 0, the leftmost 256x256 cell) with
- * `pngjs` — available via the `node_modules` junction, used here only in
+ * `pngjs` — a declared devDependency, used here only in
  * `scripts/` tooling, never imported by `src/` (D14's zero-runtime-deps rule
  * applies to the shipped plugin, not dev scripts) — and picks:
  *   - a fully-transparent corner pixel (alpha === 0)

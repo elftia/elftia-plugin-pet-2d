@@ -143,12 +143,18 @@ runs as part of `npm run verify` (`verify:trim`).
 
 ## Development
 
-Zero installs: this repo has no `dependencies`/`devDependencies` and never
-runs `npm install` — `node_modules` is a junction into the host Elftia
-repo's own `node_modules`, and all tooling (TypeScript, ESLint, Vitest,
-Vite, npx electron) is borrowed from there. `npm run verify` is the full
-gate: typecheck → lint → tests → pack gate → build (+ checksum stamping +
-dist verification) → the trim proof.
+`npm ci` — this repo is a standalone producer: every build dependency
+(TypeScript, ESLint, Vitest, Vite, tsx, electron, and the `@elftia/*`
+contract packages) is declared in `package.json` and pinned by
+`package-lock.json`. It borrows nothing from a parent directory or a sibling
+Elftia checkout, so a fresh clone builds anywhere. Every dependency, including
+the `@elftia/*` contract packages, now resolves from the public npm registry —
+there are no `file:` tarballs left in this repo.
+
+`npm run verify` is the full gate: typecheck → lint → tests → pack gate →
+build (+ checksum stamping + dist verification) → the trim proof → the
+`elftia-plugin` install-tree gate → `release`, which writes
+`release/<version>/pet-2d.zip` and its `pet-2d.json` sidecar.
 
 See `NOTICE` for the third-party dev-fixture policy and `LICENSE` for
 terms.

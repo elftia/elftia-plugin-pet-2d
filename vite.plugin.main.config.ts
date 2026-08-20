@@ -15,8 +15,8 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 //     the host's `pluginMainHostExternals` resolves for plugin main halves
 //     (the host hands over its OWN loaded copy at require time). Anything
 //     else must BUNDLE: `adm-zip` is the repo's first bundled dependency
-//     (a devDependency resolved through the node_modules junction at build
-//     time; the shipped index.cjs is self-contained at runtime).
+//     (a declared devDependency resolved from this repo's own node_modules
+//     at build time; the shipped index.cjs is self-contained at runtime).
 //   - `@elftia/plugin-types` is type-only (erased by `verbatimModuleSyntax`)
 //     but listed external so a stray value reference never bundles.
 //   - `emptyOutDir: false` — the pet/manager passes and build-packs wrote
