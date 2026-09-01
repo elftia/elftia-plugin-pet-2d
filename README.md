@@ -24,7 +24,7 @@ this repo — see NOTICE for the full policy and the gate that proves it.
    ```
 
    On success `dist\pet-2d\` contains `elftia-plugin.json` (with a stamped
-   sha512 checksum — see "Trust stamping" in `scripts/stamp-manifest.mjs`),
+   sha512 checksums written by the official `elftia-plugin stamp` command),
    `renderer\pet.mjs`, and both pack modules under
    `renderer\characters\`.
 
@@ -124,8 +124,8 @@ Want a main-window settings section for your pet plugin? Declare
 `contributes.renderer` **alongside** `contributes.pet` in the manifest:
 pet-only plugins have no module instance in the main window, so
 `host.settings.registerSection` is only reachable from a renderer
-contribution. Stamp both entries' checksums (`scripts/stamp-manifest.mjs`
-already handles every declared code slot).
+contribution. The final `elftia-plugin stamp` build step stamps every declared
+code slot and the following read-only verifier checks the shipped bytes.
 
 ## The ledger is trimmable
 
@@ -152,9 +152,11 @@ the `@elftia/*` contract packages, now resolves from the public npm registry —
 there are no `file:` tarballs left in this repo.
 
 `npm run verify` is the full gate: typecheck → lint → tests → pack gate →
-build (+ checksum stamping + dist verification) → the trim proof → the
+build (+ official checksum stamping + dist verification) → the trim proof → the
 `elftia-plugin` install-tree gate → `release`, which writes
-`release/<version>/pet-2d.zip` and its `pet-2d.json` sidecar.
+`release/<version>/pet-2d.epkg` (a standard ZIP container) and its EPKG v2
+`pet-2d.json` sidecar. `npm run verify:repro` performs two isolated `npm ci`
+builds and compares the install tree plus both release files byte for byte.
 
 See `NOTICE` for the third-party dev-fixture policy and `LICENSE` for
 terms.

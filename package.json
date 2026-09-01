@@ -1,13 +1,13 @@
 {
   "private": true,
   "name": "elftia-plugin-pet-2d",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "description": "2D desktop pet plugin for Elftia — facts->state grammar, sprite player, character-pack contract, whale-girl-format compatibility.",
   "type": "module",
   "license": "MIT",
   "devDependencies": {
     "@elftia/agent-spec": "^1.26.0",
-    "@elftia/plugin-kit": "^0.1.0",
+    "@elftia/plugin-kit": "0.2.1",
     "@elftia/plugin-types": "^1.46.0",
     "@eslint/js": "^9.39.2",
     "@types/adm-zip": "^0.5.7",
@@ -37,7 +37,9 @@
     "lint": "eslint .",
     "test": "vitest run",
     "build:packs": "tsx scripts/build-packs.ts",
-    "build": "tsx scripts/build-packs.ts && vite build --config vite.plugin.config.ts && vite build --config vite.plugin.manager.config.ts && vite build --config vite.plugin.main.config.ts && node scripts/stamp-manifest.mjs && node scripts/verify-dist.mjs",
+    "stage:manifest": "node scripts/stage-manifest.mjs",
+    "stamp:dist": "elftia-plugin stamp dist/pet-2d",
+    "build": "tsx scripts/build-packs.ts && vite build --config vite.plugin.config.ts && vite build --config vite.plugin.manager.config.ts && vite build --config vite.plugin.main.config.ts && npm run stage:manifest && npm run stamp:dist && npm run verify:dist && npm run verify:plugin",
     "verify:packs": "tsx scripts/verify-packs.ts",
     "verify:dist": "node scripts/verify-dist.mjs",
     "verify:no-fixture-bytes": "node scripts/verify-no-fixture-bytes.mjs",
@@ -46,6 +48,7 @@
     "pack": "elftia-plugin pack dist/pet-2d --out .elftia-work/pack",
     "release": "elftia-plugin release dist/pet-2d --out release",
     "verify": "npm run typecheck && npm run lint && npm test && npm run verify:packs && npm run build && npm run verify:trim && npm run verify:plugin && npm run release",
+    "verify:repro": "node scripts/verify-reproducible.mjs",
     "spike": "electron scripts/spike/pet-surface-spike.mjs"
   }
 }
