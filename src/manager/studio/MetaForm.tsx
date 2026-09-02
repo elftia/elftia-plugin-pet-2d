@@ -3,8 +3,10 @@
  * the four identity fields. The id input is the only one with a live
  * pattern gate (the contract's `^[a-z0-9][a-z0-9-]{0,31}$` shows up in the
  * problems list the moment it breaks — this component stays presentational;
- * `draft.ts` + `validateCharacterPack` own the rule).
+ * `draft.ts` + `validateCharacterPack` own the rule). Inputs are created
+ * through `../hostedElements` (the 0.2.4 event-opt-in patch).
  */
+import { HostedInput } from '../hostedElements';
 import type { StudioDraft } from './draft';
 
 export type MetaField = 'id' | 'name' | 'credit' | 'license';
@@ -28,7 +30,7 @@ export function MetaForm(props: {
         {fields.map(({ field, label }) => (
           <label key={field} className="flex flex-col gap-1 text-xs text-text-muted">
             {label}
-            <input
+            <HostedInput
               type="text"
               data-testid={`pet-manager-studio-meta-${field}`}
               className="rounded-md border border-border/40 bg-surface-1 px-2 py-1 text-sm text-foreground"

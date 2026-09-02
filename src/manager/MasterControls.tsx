@@ -7,6 +7,8 @@
  * form controls). A degraded host without the ui handle renders a semantic
  * `<button role="switch">` fallback — still not a native checkbox, and the
  * state stays readable (tests exercise this branch with ui-less fakes).
+ * Plugin-local buttons are created through `./hostedElements` so the
+ * remote-DOM serializer opts them into event forwarding (the 0.2.4 patch).
  *
  * Empty states (all four unit-tested, task 5.2):
  *   off                -> OffBanner with the enable CTA (D6③)
@@ -21,6 +23,7 @@ import { createElement, type FunctionComponent } from 'react';
 
 import type { PageStrings } from '../interact/locale';
 import { getManagerHostOrNull } from './hostBridge';
+import { HostedButton } from './hostedElements';
 import type { UsePetConfigResult } from './usePetConfig';
 
 function SwitchRow(props: {
@@ -56,7 +59,7 @@ function SwitchRow(props: {
           onCheckedChange: props.onToggle,
         })
       : createElement(
-          'button',
+          HostedButton,
           {
             type: 'button',
             role: 'switch',
@@ -146,7 +149,7 @@ export function MasterControls(props: {
                   strings.unresolvedRowText,
                 ),
                 createElement(
-                  'button',
+                  HostedButton,
                   {
                     type: 'button',
                     'data-testid': 'pet-manager-rescan-button',
@@ -200,7 +203,7 @@ export function OffBanner(props: {
         strings.offBanner,
       ),
       createElement(
-        'button',
+        HostedButton,
         {
           type: 'button',
           'data-testid': 'pet-manager-enable-button',

@@ -12,9 +12,11 @@
  * MasterControls.tsx. The gallery (group 6) and ledger panel (group 8)
  * keep their section roots here as stable testid anchors.
  *
- * No host imports: react arrives through the host import map (bare
- * specifier, external in vite.plugin.manager.config.ts); strings come from
- * the plugin's own locale table (D7 — no host i18n keys).
+ * React arrives through the host import map (bare specifier, external in
+ * vite.plugin.manager.config.ts); strings come from the plugin's own locale
+ * table (D7 — no host i18n keys). INTERACTIVE elements are created through
+ * `./hostedElements` (the host's patched createElement) so the remote-DOM
+ * serializer opts them into event forwarding — see that module's header.
  *
  * Group 6: the page is a two-view switch — `manage` (the D6 anatomy below)
  * and `studio` (the Pack Studio sub-view; entry button in the gallery
@@ -26,6 +28,7 @@ import { useState } from 'react';
 import { pageStrings, resolvePageLocale } from '../interact/locale';
 import { Gallery } from './Gallery';
 import { getManagerHostOrNull } from './hostBridge';
+import { HostedButton } from './hostedElements';
 import { LedgerPanel } from './LedgerPanel';
 import { MasterControls, OffBanner } from './MasterControls';
 import { Studio } from './studio/Studio';
@@ -84,14 +87,14 @@ export function ManagerPage() {
             >
               <div className="mb-2 flex items-center justify-between gap-2">
                 <h2 className="text-sm font-semibold text-foreground">{strings.galleryTitle}</h2>
-                <button
+                <HostedButton
                   type="button"
                   data-testid="pet-manager-studio-open"
                   className="rounded-md border border-border/40 px-2 py-1 text-xs text-foreground hover:bg-surface-2"
                   onClick={() => setView('studio')}
                 >
                   {strings.studio.openAction}
-                </button>
+                </HostedButton>
               </div>
               <Gallery strings={strings} />
             </section>

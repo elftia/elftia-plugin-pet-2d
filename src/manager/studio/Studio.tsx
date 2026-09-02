@@ -12,6 +12,10 @@
  * prefills the draft and the ACTIVE source dir switches to the character's
  * own sheet dir, so every later verb (preview, save) needs no changes.
  * The rights caveat rides the offer (MIT covers the software, not the art).
+ *
+ * Every button/select here is created through `../hostedElements` (the
+ * host's patched createElement) so the remote-DOM serializer opts them into
+ * event forwarding — the 0.2.4 dead-controls patch.
  */
 import { useEffect, useRef, useState } from 'react';
 
@@ -21,6 +25,7 @@ import type { PageStrings } from '../../interact/locale';
 import type { PackIpc } from '../../packs/userPacks';
 import { notifyPacksChanged } from '../../packs/userPacks';
 import { fromWhaleGirlManifest } from '../../packs/whaleGirlCompat';
+import { HostedButton, HostedSelect } from '../hostedElements';
 import {
   copyIdleToUnassigned,
   draftFromManifest,
@@ -181,14 +186,14 @@ export function Studio(props: {
   return (
     <div data-testid="pet-manager-studio" className="flex flex-col gap-4">
       <div className="flex items-center gap-3">
-        <button
+        <HostedButton
           type="button"
           data-testid="pet-manager-studio-back"
           className="rounded-md border border-border/40 px-2 py-1 text-xs text-foreground hover:bg-surface-2"
           onClick={props.onExit}
         >
           {s.backAction}
-        </button>
+        </HostedButton>
       </div>
 
       {ipc === null ? (
@@ -205,7 +210,7 @@ export function Studio(props: {
           <section data-testid="pet-manager-studio-source" className="flex flex-col gap-2">
             <h3 className="text-sm font-semibold text-foreground">{s.sourceTitle}</h3>
             <div className="flex items-center gap-3">
-              <button
+              <HostedButton
                 type="button"
                 data-testid="pet-manager-studio-pick-dir"
                 className="rounded-md border border-border/40 px-2 py-1 text-xs text-foreground hover:bg-surface-2"
@@ -214,7 +219,7 @@ export function Studio(props: {
                 }}
               >
                 {s.pickSourceDir}
-              </button>
+              </HostedButton>
               {activeDir !== null ? (
                 <span
                   data-testid="pet-manager-studio-dir-label"
@@ -243,7 +248,7 @@ export function Studio(props: {
                 <p className="mt-1 text-xs text-text-muted">{s.whaleGirlRights}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {offer.map((character) => (
-                    <button
+                    <HostedButton
                       key={character.id}
                       type="button"
                       data-testid={`pet-manager-studio-wg-offer-${character.id}`}
@@ -253,7 +258,7 @@ export function Studio(props: {
                       }}
                     >
                       {s.whaleGirlFill.replace('{name}', character.name)}
-                    </button>
+                    </HostedButton>
                   ))}
                 </div>
               </div>
@@ -283,7 +288,7 @@ export function Studio(props: {
                 <div className="flex items-start gap-4">
                   <div className="flex flex-col gap-1">
                     <StudioPreview slot={draft.states[previewState]} sheetUrl={previewUrl} />
-                    <select
+                    <HostedSelect
                       data-testid="pet-manager-studio-preview-state"
                       className="rounded-md border border-border/40 bg-surface-1 px-1 py-0.5 text-xs text-foreground"
                       value={previewState}
@@ -294,7 +299,7 @@ export function Studio(props: {
                           {state}
                         </option>
                       ))}
-                    </select>
+                    </HostedSelect>
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-semibold text-foreground">{s.problemsTitle}</p>
@@ -318,7 +323,7 @@ export function Studio(props: {
               {/* ⑤⑥ Save + export */}
               <section className="flex flex-col gap-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <button
+                  <HostedButton
                     type="button"
                     data-testid="pet-manager-studio-save"
                     disabled={problems.length > 0}
@@ -328,9 +333,9 @@ export function Studio(props: {
                     }}
                   >
                     {s.saveAction}
-                  </button>
+                  </HostedButton>
                   {saveState.kind === 'collision' ? (
-                    <button
+                    <HostedButton
                       type="button"
                       data-testid="pet-manager-studio-overwrite"
                       className="rounded-md border border-border/40 px-3 py-1 text-xs text-foreground hover:bg-surface-2"
@@ -339,7 +344,7 @@ export function Studio(props: {
                       }}
                     >
                       {s.overwriteAction}
-                    </button>
+                    </HostedButton>
                   ) : null}
                 </div>
                 {saveState.kind === 'failed' ? (
@@ -355,7 +360,7 @@ export function Studio(props: {
                       {s.savedNote.replace('{id}', saveState.id)}
                     </p>
                     <div className="flex flex-wrap items-center gap-2">
-                      <button
+                      <HostedButton
                         type="button"
                         data-testid="pet-manager-studio-export"
                         className="rounded-md border border-border/40 px-3 py-1 text-xs text-foreground hover:bg-surface-2"
@@ -364,7 +369,7 @@ export function Studio(props: {
                         }}
                       >
                         {s.exportAction}
-                      </button>
+                      </HostedButton>
                       {exportPath !== null ? (
                         <span data-testid="pet-manager-studio-export-note" className="text-xs text-text-muted">
                           {strings.exportDoneNote.replace('{path}', exportPath)}

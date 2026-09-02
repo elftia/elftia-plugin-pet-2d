@@ -59,6 +59,7 @@ import {
 } from '../state/prefs';
 import { safeLocalStorage } from '../state/safeStorage';
 import { getManagerHostOrNull } from './hostBridge';
+import { HostedButton } from './hostedElements';
 import { PackCard } from './PackCard';
 
 export function Gallery(props: { strings: PageStrings; ipc?: PackIpc | null }) {
@@ -221,7 +222,7 @@ export function Gallery(props: { strings: PageStrings; ipc?: PackIpc | null }) {
   return (
     <div data-testid="pet-manager-gallery-grid" className="flex flex-wrap gap-3">
       <div data-testid="pet-manager-gallery-actions" className="flex w-full items-center justify-end gap-3">
-        <button
+        <HostedButton
           type="button"
           data-testid="pet-manager-import"
           disabled={ipc === null || importBusy}
@@ -231,7 +232,7 @@ export function Gallery(props: { strings: PageStrings; ipc?: PackIpc | null }) {
           }}
         >
           {strings.importAction}
-        </button>
+        </HostedButton>
         {importNote !== null ? (
           <span data-testid="pet-manager-import-note" className="text-xs text-text-muted">
             {importNote}

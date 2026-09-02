@@ -16,7 +16,9 @@
  * degrades to the fallback glyph pack, marked `data-fallback="true"`.
  * User cards add the "用户包" chip and (group 5.3) export/delete actions,
  * rendered in a SIBLING row below the select button (nested buttons are
- * invalid HTML and bubble clicks into selection).
+ * invalid HTML and bubble clicks into selection). All three buttons are
+ * created through `./hostedElements` so the remote-DOM serializer opts them
+ * into event forwarding (the 0.2.4 dead-controls patch).
  */
 import { useEffect, useState } from 'react';
 
@@ -26,6 +28,7 @@ import { type CharacterPack, FALLBACK_PACK_ID } from '../packs/loadPack';
 import { resolvePack,type ResolvePackDeps } from '../packs/userPacks';
 import { frameAt } from '../render/player';
 import { backgroundPositionFor, backgroundSizeFor } from '../render/sheetGeometry';
+import { HostedButton } from './hostedElements';
 
 /** The preview stage edge (D6④: cards preview at ~128px). */
 export const PACK_PREVIEW_PX = 128;
@@ -92,7 +95,7 @@ export function PackCard(props: {
 
   return (
     <div className="flex min-w-0 flex-col">
-      <button
+      <HostedButton
         type="button"
         data-testid={`pet-manager-pack-card-${id}`}
         data-selected={selected ? 'true' : 'false'}
@@ -154,10 +157,10 @@ export function PackCard(props: {
             ) : null}
           </span>
         </div>
-      </button>
+      </HostedButton>
       {kind === 'user' ? (
         <div className="mt-1 flex items-center justify-center gap-2">
-          <button
+          <HostedButton
             type="button"
             data-testid={`pet-manager-pack-export-${id}`}
             className="rounded-md border border-border/40 px-2 py-0.5 text-xs text-foreground"
@@ -166,8 +169,8 @@ export function PackCard(props: {
             }}
           >
             {strings.packExportAction}
-          </button>
-          <button
+          </HostedButton>
+          <HostedButton
             type="button"
             data-testid={`pet-manager-pack-delete-${id}`}
             className="rounded-md border border-border/40 px-2 py-0.5 text-xs text-foreground"
@@ -176,7 +179,7 @@ export function PackCard(props: {
             }}
           >
             {strings.packDeleteAction}
-          </button>
+          </HostedButton>
         </div>
       ) : null}
     </div>

@@ -114,6 +114,33 @@ from a plugin.
   (`petRuntime.getConfig`/`setConfig`, `packs:*` ipc), which do not depend
   on the frame's origin.
 
+## Remote-DOM interaction (v0.2.4)
+
+- **Plugin-local interactive elements are event-forwarded only through the
+  host's patched React.** The manager page renders inside a remote-projected
+  compartment: the host attaches forwarded event handlers only to serialized
+  nodes whose `events` array is non-empty, and that array is derived from the
+  `data-elftia-events` attribute that only `host.react.instance.createElement`
+  stamps. Until 0.2.4 every manager element was built with the bare (plain)
+  React import, so every plugin-local button serialized with `events: []` and
+  clicks did nothing. Since 0.2.4 all interactive elements are created through
+  `src/manager/hostedElements.ts` (`HostedButton`/`HostedInput`/`HostedSelect`),
+  which uses the host's patched createElement when the bridge holds one and
+  plain React otherwise (byte-identical DOM for degraded hosts and test
+  fakes). `host.ui.Switch` (the master switches) was never affected — it
+  rides the typed-callback path.
+- **Buttons fully round-trip; form-control change semantics may not.** A
+  forwarded click re-dispatches a native event on the in-frame node, so every
+  button is fully functional. The studio's local text inputs and selects are
+  opted in the same way, but the host's replay writes `node.value` only for
+  `<input>`/`<textarea>` (never `<select>`), and React's value-tracker
+  dedupes a programmatic value write followed by a replayed 'change' — so
+  plugin-local form controls can fire with a stale value or not at all. The
+  working alternative for controls whose change VALUE matters is the
+  `host.ui.*` typed-callback path (`ui.Input`/`ui.Select`), which the DS
+  acceptance proved end-to-end; the Studio's dense grid keeps native controls
+  for layout reasons and inherits this host-side replay caveat.
+
 ## Scope
 
 - **2D sprite packs only.** The contract (and this reference

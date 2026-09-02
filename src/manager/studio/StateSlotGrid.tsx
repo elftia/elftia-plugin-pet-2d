@@ -6,7 +6,8 @@
  * frames === 1 (except `error`), and every edit rides `normalizeSlot` so
  * the draft self-heals out of combinations the contract forbids. The bulk
  * "copy idle → unassigned" action is the duplicate-from-base path (a
- * whale-girl atlas commonly has one base sheet).
+ * whale-girl atlas commonly has one base sheet). All row controls are
+ * created through `../hostedElements` (the 0.2.4 event-opt-in patch).
  */
 import {
   MOTION_ON_MULTI_FRAME_EXCEPTION,
@@ -16,6 +17,7 @@ import {
   PLAYBACK_MODES,
 } from '../../contract/petState';
 import type { StudioStrings } from '../../interact/studioStrings';
+import { HostedButton, HostedInput, HostedSelect } from '../hostedElements';
 import type { StudioCatalogFile, StudioDraft } from './draft';
 
 export function StateSlotGrid(props: {
@@ -31,14 +33,14 @@ export function StateSlotGrid(props: {
     <section data-testid="pet-manager-studio-slots">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-foreground">{strings.slotsTitle}</h3>
-        <button
+        <HostedButton
           type="button"
           data-testid="pet-manager-studio-copy-idle"
           className="rounded-md border border-border/40 px-2 py-1 text-xs text-foreground hover:bg-surface-2"
           onClick={onCopyIdle}
         >
           {strings.copyFromIdle}
-        </button>
+        </HostedButton>
       </div>
       <div className="mt-2 overflow-x-auto">
         <table className="w-full text-xs">
@@ -83,7 +85,7 @@ function SlotRow(props: {
     <tr data-testid={`pet-manager-studio-slot-${state}`}>
       <td className="py-1 pr-2 font-medium text-foreground">{state}</td>
       <td className="py-1 pr-2">
-        <select
+        <HostedSelect
           data-testid={`pet-manager-studio-slot-${state}-sheet`}
           className="max-w-40 rounded-md border border-border/40 bg-surface-1 px-1 py-0.5 text-foreground"
           value={slot.sheet}
@@ -95,10 +97,10 @@ function SlotRow(props: {
               {name}
             </option>
           ))}
-        </select>
+        </HostedSelect>
       </td>
       <td className="py-1 pr-2">
-        <input
+        <HostedInput
           type="number"
           min={1}
           max={64}
@@ -109,7 +111,7 @@ function SlotRow(props: {
         />
       </td>
       <td className="py-1 pr-2">
-        <input
+        <HostedInput
           type="number"
           min={1}
           max={30}
@@ -120,7 +122,7 @@ function SlotRow(props: {
         />
       </td>
       <td className="py-1 pr-2">
-        <select
+        <HostedSelect
           data-testid={`pet-manager-studio-slot-${state}-playback`}
           className="rounded-md border border-border/40 bg-surface-1 px-1 py-0.5 text-foreground"
           value={slot.playback}
@@ -134,10 +136,10 @@ function SlotRow(props: {
               </option>
             );
           })}
-        </select>
+        </HostedSelect>
       </td>
       <td className="py-1 pr-2">
-        <select
+        <HostedSelect
           data-testid={`pet-manager-studio-slot-${state}-motion`}
           className="rounded-md border border-border/40 bg-surface-1 px-1 py-0.5 text-foreground"
           value={slot.motion ?? ''}
@@ -152,7 +154,7 @@ function SlotRow(props: {
               {recipe}
             </option>
           ))}
-        </select>
+        </HostedSelect>
       </td>
     </tr>
   );
