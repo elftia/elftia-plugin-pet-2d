@@ -66,6 +66,7 @@ import {
   type PrefsStore,
   readPrefs,
 } from './state/prefs';
+import { safeLocalStorage } from './state/safeStorage';
 
 /** D13: the sense tick. 8 Hz — far finer than any window that matters. */
 const SENSE_TICK_MS = 125;
@@ -108,12 +109,12 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
   // built-ins, never fail the boot). The cache seeds rotation instantly; the
   // live fetch replaces it as soon as it lands.
   const ipc: unknown = host.ipc;
-  let userPacks: UserPackSummary[] = readCachedUserPacks(window.localStorage);
+  let userPacks: UserPackSummary[] = readCachedUserPacks(safeLocalStorage());
   function isSelectablePack(id: string): boolean {
     return isKnownPackId(id) || userPacks.some((pack) => pack.id === id);
   }
   async function refetchUserPacks(): Promise<void> {
-    userPacks = await refreshUserPacks(ipc, window.localStorage);
+    userPacks = await refreshUserPacks(ipc, safeLocalStorage());
   }
   void refetchUserPacks();
 
@@ -340,8 +341,8 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
   // switch.
   function onPrefsStorage(event: StorageEvent): void {
     if (event.key !== PREFS_STORAGE_KEY) return;
-    if (event.storageArea !== window.localStorage) return;
-    const next = readPrefs(window.localStorage).packId ?? '';
+    if (event.storageArea !== safeLocalStorage()) return;
+    const next = readPrefs(safeLocalStorage()).packId ?? '';
     if (next === packId) return;
     if (isKnownPackId(next)) {
       void applyPack(next);
@@ -361,7 +362,7 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
   // alternative is a pet permanently rendering the fallback glyph.
   function onPacksRevStorage(event: StorageEvent): void {
     if (event.key !== PACKS_REV_KEY) return;
-    if (event.storageArea !== window.localStorage) return;
+    if (event.storageArea !== safeLocalStorage()) return;
     void (async () => {
       await refetchUserPacks();
       if (packId !== '' && !isSelectablePack(packId)) {

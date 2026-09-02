@@ -19,10 +19,12 @@
  * (`app://bundle`) are DIFFERENT origins and the ledger does not migrate.
  *
  * All ambient dependencies (storage/timeout/document/window) are injectable
- * with lazy `typeof` defaults, so the unit tests (node project, no jsdom)
- * drive everything with fakes and nothing at module scope can crash.
+ * with lazy defaults (storage via `safeLocalStorage`, the rest via `typeof`
+ * guards), so the unit tests (node project, no jsdom) drive everything with
+ * fakes and nothing at module scope can crash.
  */
 import type { LedgerMemoryEntry, LedgerStats } from '../contract/ledgerPort';
+import { safeLocalStorage } from '../state/safeStorage';
 import { MEMORY_MAX } from './memory';
 import { TITLES } from './titles';
 import { XP_SAFE_MAX } from './xp';
@@ -192,9 +194,9 @@ export interface PersistenceDeps {
  * not in pet.ts). Callers hand `readLedgerState` its storage.
  */
 export function createLedgerPersistence(deps: PersistenceDeps = {}): LedgerPersistence {
-  const storage: StorageLike =
-    deps.storage ??
-    (typeof localStorage !== 'undefined' ? localStorage : memoryBackedStorage());
+  // `typeof localStorage` guards nothing in the opaque-frame sandbox (the
+  // getter throws on access) — safeLocalStorage owns that hazard.
+  const storage: StorageLike = deps.storage ?? safeLocalStorage();
   const timeout: TimeoutLike =
     deps.timeout ?? { setTimeout: (h, ms) => globalThis.setTimeout(h, ms), clearTimeout: (h) => globalThis.clearTimeout(h as number) };
   const debounceMs = deps.debounceMs ?? LEDGER_WRITE_DEBOUNCE_MS;
@@ -237,18 +239,6 @@ export function createLedgerPersistence(deps: PersistenceDeps = {}): LedgerPersi
       pending = null;
       documentRef?.removeEventListener('visibilitychange', onHidden);
       windowRef?.removeEventListener('pagehide', onPageHide);
-    },
-  };
-}
-
-/** Last-resort storage for a host with no localStorage at all: the session
- * keeps the ledger in memory and persistence becomes a no-op sink. */
-function memoryBackedStorage(): StorageLike {
-  let value: string | null = null;
-  return {
-    getItem: () => value,
-    setItem: (_key: string, next: string) => {
-      value = next;
     },
   };
 }

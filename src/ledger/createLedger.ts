@@ -28,6 +28,7 @@
  */
 import type { PetFactEntryLike, PetFactsSnapshotLike } from '../contract/facts';
 import type { LedgerPort, LedgerStats, LedgerSummary } from '../contract/ledgerPort';
+import { safeLocalStorage } from '../state/safeStorage';
 import {
   levelUpMemoryText,
   mediaJobMemoryText,
@@ -91,11 +92,9 @@ export interface LedgerDeps extends PersistenceDeps {
 }
 
 export function createLedger(deps: LedgerDeps = {}): Ledger {
-  const storage: StorageLike =
-    deps.storage ?? (typeof localStorage !== 'undefined' ? localStorage : undefined) ?? {
-      getItem: () => null,
-      setItem: () => {},
-    };
+  // safeLocalStorage: the bare/typeof global read throws in the opaque-frame
+  // sandbox (and node tests) — never a reason to fail the pet's boot.
+  const storage: StorageLike = deps.storage ?? safeLocalStorage();
   const now = deps.now ?? (() => globalThis.Date.now());
   const persistence = createLedgerPersistence({ ...deps, storage });
 

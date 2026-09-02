@@ -95,6 +95,25 @@ from a plugin.
   debounces its writes ≤ 1 s, so the panel trails real accrual by at most
   one debounce window plus the event dispatch.
 
+## Sandboxed storage (v0.2.3)
+
+- **In the opaque-frame sandbox there is no storage at all — only a
+  session-scoped stand-in.** The host mounts both plugin surfaces
+  (`pet.mjs`, `manager.mjs`) in `allow-scripts` sandboxes without
+  `allow-same-origin`, so the frame's origin is opaque and the
+  `localStorage` property access itself throws `SecurityError`. Since
+  0.2.3 every storage read goes through `src/state/safeStorage.ts`, which
+  hands back the REAL storage when the host grants one (dev, trusted
+  windows — unchanged behavior) and otherwise a shared in-memory
+  stand-in, so both pages render and same-page reads/writes cohere. What
+  is unavailable in that mode: persistence beyond the page's life (prefs,
+  ledger growth, the user-pack cache reset on reload) and every
+  cross-window `storage`-event channel (the pack-selection ring and the
+  packs-rev refresh protocol only sync windows that share a real origin).
+  In-sandbox plugin state remains readable/writable through the host verbs
+  (`petRuntime.getConfig`/`setConfig`, `packs:*` ipc), which do not depend
+  on the frame's origin.
+
 ## Scope
 
 - **2D sprite packs only.** The contract (and this reference

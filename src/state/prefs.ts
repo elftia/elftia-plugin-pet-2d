@@ -10,6 +10,8 @@
  * Robustness contract: a corrupt/unreadable store degrades to EMPTY prefs
  * (default pack, default facing) — never a throw, never a blocked activate.
  */
+import { safeLocalStorage } from './safeStorage';
+
 export const PREFS_STORAGE_KEY = 'elftia-pet-2d:prefs:v1';
 
 /** D11's stored shape. Both fields optional; unknown fields are dropped. */
@@ -80,7 +82,10 @@ export function createPrefsStore(
     debounceMs?: number;
   } = {}
 ): PrefsStore {
-  const storage = options.storage ?? localStorage;
+  // `safeLocalStorage`, not the bare global: in the opaque-frame sandbox
+  // the `localStorage` getter itself throws SecurityError, and this default
+  // runs inside `Gallery`'s `useState` initializer — the 0.2.2 blank page.
+  const storage = options.storage ?? safeLocalStorage();
   const timeout = options.timeout ?? {
     setTimeout: (handler: () => void, ms: number) => setTimeout(handler, ms),
     clearTimeout: (handle: unknown) => clearTimeout(handle as ReturnType<typeof setTimeout>),

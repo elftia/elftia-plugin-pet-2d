@@ -23,6 +23,7 @@ import { useEffect, useState } from 'react';
 
 import type { LedgerPanelModel } from '../contract/ledgerPort';
 import type { PageStrings } from '../interact/locale';
+import { safeLocalStorage } from '../state/safeStorage';
 
 /** What the seam must yield — a structural subset of `ledger/inspect.ts`. */
 export interface LedgerInspectModule {
@@ -52,7 +53,7 @@ export function LedgerPanel(props: { strings: PageStrings; loadInspect?: () => P
       try {
         const inspect = await loadInspect();
         ledgerKey = inspect.LEDGER_STORAGE_KEY;
-        const model = inspect.summarizeLedger(inspect.readLedgerState(window.localStorage));
+        const model = inspect.summarizeLedger(inspect.readLedgerState(safeLocalStorage()));
         if (!cancelled) setView({ status: 'ready', model });
       } catch {
         // Absent module (trimmed build), rejected import, or a throwing
@@ -70,7 +71,7 @@ export function LedgerPanel(props: { strings: PageStrings; loadInspect?: () => P
     const onLedgerStorage = (event: StorageEvent): void => {
       if (ledgerKey === null) return;
       if (event.key !== ledgerKey) return;
-      if (event.storageArea !== window.localStorage) return;
+      if (event.storageArea !== safeLocalStorage()) return;
       void load();
     };
     window.addEventListener('storage', onLedgerStorage);

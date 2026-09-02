@@ -21,6 +21,7 @@
  */
 import type { AgentUiScopedIpc } from '@elftia/plugin-types';
 
+import { safeWindowStorage } from '../state/safeStorage';
 import {
   type CharacterPack,
   fallbackPack,
@@ -185,7 +186,10 @@ export interface PacksChangedWindow {
 }
 
 export function notifyPacksChanged(win: PacksChangedWindow | null | undefined): void {
-  bumpPacksRev(win?.localStorage);
+  // The property read (not the bump) is the hazard in the opaque-frame
+  // sandbox — `win.localStorage` throws there; the rev is simply unreachable
+  // while the in-window event below still fires.
+  bumpPacksRev(safeWindowStorage(win));
   try {
     win?.dispatchEvent(new Event(PACKS_CHANGED_EVENT));
   } catch {

@@ -57,6 +57,7 @@ import {
   type PrefsStore,
   readPrefs,
 } from '../state/prefs';
+import { safeLocalStorage } from '../state/safeStorage';
 import { getManagerHostOrNull } from './hostBridge';
 import { PackCard } from './PackCard';
 
@@ -77,7 +78,7 @@ export function Gallery(props: { strings: PageStrings; ipc?: PackIpc | null }) {
   const [importBusy, setImportBusy] = useState(false);
 
   const refetch = useCallback(async () => {
-    setUserPacks(await refreshUserPacks(ipc, window.localStorage));
+    setUserPacks(await refreshUserPacks(ipc, safeLocalStorage()));
   }, [ipc]);
 
   useEffect(() => {
@@ -94,7 +95,7 @@ export function Gallery(props: { strings: PageStrings; ipc?: PackIpc | null }) {
     };
     const onRevStorage = (event: StorageEvent): void => {
       if (event.key !== PACKS_REV_KEY) return;
-      if (event.storageArea !== window.localStorage) return;
+      if (event.storageArea !== safeLocalStorage()) return;
       onChanged();
     };
     window.addEventListener(PACKS_CHANGED_EVENT, onChanged);
@@ -112,8 +113,8 @@ export function Gallery(props: { strings: PageStrings; ipc?: PackIpc | null }) {
   useEffect(() => {
     const onPrefsStorage = (event: StorageEvent): void => {
       if (event.key !== PREFS_STORAGE_KEY) return;
-      if (event.storageArea !== window.localStorage) return;
-      setSelected(readPrefs(window.localStorage).packId ?? DEFAULT_PACK_ID);
+      if (event.storageArea !== safeLocalStorage()) return;
+      setSelected(readPrefs(safeLocalStorage()).packId ?? DEFAULT_PACK_ID);
     };
     window.addEventListener('storage', onPrefsStorage);
     return () => window.removeEventListener('storage', onPrefsStorage);
