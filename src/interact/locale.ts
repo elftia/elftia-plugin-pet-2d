@@ -13,13 +13,17 @@ import { studioStrings } from './studioStrings';
 /** The three languages this plugin ships strings for. */
 export type PetLocale = 'en' | 'zh' | 'ja';
 
-/** The context menu's four verbs (D12) + its accessible label. */
+/** The context menu's four verbs (D12) + its accessible label + Quick Chat. */
 export interface MenuStrings {
   readonly menuLabel: string;
   readonly feed: string;
   readonly play: string;
   readonly switchCharacter: string;
   readonly exitApp: string;
+  /** The optional Quick Chat launcher item (shown only when offered). */
+  readonly quickChat: string;
+  /** Generic non-modal status when an offered Quick Chat action fails. */
+  readonly quickChatUnavailable: string;
 }
 
 const STRINGS: Record<PetLocale, MenuStrings> = {
@@ -29,6 +33,8 @@ const STRINGS: Record<PetLocale, MenuStrings> = {
     play: 'Play',
     switchCharacter: 'Switch character',
     exitApp: 'Exit Elftia',
+    quickChat: 'Quick Chat',
+    quickChatUnavailable: 'Quick Chat is unavailable right now',
   },
   zh: {
     menuLabel: '桌宠菜单',
@@ -36,6 +42,8 @@ const STRINGS: Record<PetLocale, MenuStrings> = {
     play: '玩耍',
     switchCharacter: '换角色',
     exitApp: '退出 Elftia',
+    quickChat: '快捷聊天',
+    quickChatUnavailable: '快捷聊天暂时不可用',
   },
   ja: {
     menuLabel: 'ペットメニュー',
@@ -43,6 +51,8 @@ const STRINGS: Record<PetLocale, MenuStrings> = {
     play: '遊ぶ',
     switchCharacter: 'キャラ変更',
     exitApp: 'Elftia を終了',
+    quickChat: 'クイックチャット',
+    quickChatUnavailable: 'クイックチャットは現在利用できません',
   },
 };
 

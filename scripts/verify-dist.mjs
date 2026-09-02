@@ -199,6 +199,26 @@ if (contributions.pet === undefined && contributions.renderer === undefined && c
   fail('shipped manifest declares NO code entry — nothing for the host to serve');
 }
 
+// --- 1b) the Quick Chat consumer declaration (`pet-2d-quick-chat-launcher`) --
+//
+// The launcher's `explain`/`require` calls are BROKER-GATED by the manifest:
+// an undeclared consumer reads `not-declared` and never sees the menu item,
+// so the declaration IS the feature. Exactly one OPTIONAL main-target
+// requirement for `elftia.quick-chat` `^1.0.0`, and NEVER a provides entry
+// (the pet is a consumer, not a chat surface).
+const expectedOptional = [{ id: 'elftia.quick-chat', range: '^1.0.0', target: 'main' }];
+const capabilities = shipped.capabilities;
+if (
+  JSON.stringify(capabilities?.provides ?? []) !== '[]' ||
+  JSON.stringify(capabilities?.requires ?? []) !== '[]' ||
+  JSON.stringify(capabilities?.optional ?? []) !== JSON.stringify(expectedOptional)
+) {
+  fail(
+    `shipped manifest capabilities must declare exactly optional ${JSON.stringify(expectedOptional)} with no provides/requires — got ${JSON.stringify(capabilities)}`,
+  );
+}
+console.log('verify-dist: PASS — capabilities declares the optional elftia.quick-chat consumer only');
+
 // --- 2) entry + pack-module presence -----------------------------------------
 
 if (!fs.existsSync(path.join(rendererDir, 'pet.mjs'))) {

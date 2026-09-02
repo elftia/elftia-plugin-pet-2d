@@ -45,6 +45,7 @@ import type { PetState } from './contract/petState';
 import { menuStrings, resolveLocale } from './interact/locale';
 import { attachContextMenu, type MenuHandle, openContextMenu } from './interact/menu';
 import { attachPointerHandlers, createPointerController } from './interact/pointer';
+import { createQuickChatLauncher } from './interact/quickChat';
 import { type CharacterPack } from './packs/loadPack';
 import { DEFAULT_PACK_ID, isKnownPackId } from './packs/registry';
 import {
@@ -373,6 +374,14 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
   }
 
   const strings = menuStrings(resolveLocale(navigator.language));
+  // The optional Quick Chat launcher (`pet-2d-quick-chat-launcher`): a fresh
+  // explain per menu generation, a fresh require/invoke/release per click.
+  // `host.capabilities` is feature-detected (the same discipline as
+  // petRuntime) — without it the menu simply stays at its four core verbs.
+  const quickChat = createQuickChatLauncher({
+    capabilities: host.capabilities,
+    statusText: strings.quickChatUnavailable,
+  });
   const detachContextMenu = attachContextMenu(
     stage.elements.stage,
     (x, y) =>
@@ -400,6 +409,17 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
           },
         },
       });
+      const menuGeneration = menu;
+      void quickChat.probe().then((available) => {
+        // A stale probe (this menu was closed/replaced while explain was in
+        // flight) lands on a CLOSED handle — offerOptionalAction no-ops.
+        if (!available) return;
+        menuGeneration.offerOptionalAction({
+          key: 'quick-chat',
+          label: strings.quickChat,
+          run: () => void quickChat.activate(),
+        });
+      });
       return menu;
     }
   );
@@ -421,7 +441,12 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
     }
   }
   document.addEventListener('visibilitychange', onVisibilityChange);
-  const onPageHide = (): void => prefs.flush();
+  const onPageHide = (): void => {
+    prefs.flush();
+    // Close the transient Quick Chat surface state + best-effort release any
+    // in-flight lease (late acquisitions release without invoking).
+    quickChat.dispose();
+  };
   window.addEventListener('pagehide', onPageHide);
   window.addEventListener('storage', onPrefsStorage);
   window.addEventListener('storage', onPacksRevStorage);
@@ -432,6 +457,7 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
   const disposers: Array<() => void> = [
     detachPointer,
     detachContextMenu,
+    () => quickChat.dispose(),
     stopTick,
     () => stage.player.stop(),
     () => document.removeEventListener('visibilitychange', onVisibilityChange),

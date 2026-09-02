@@ -26,20 +26,30 @@ describe('resolveLocale', () => {
 });
 
 describe('menuStrings', () => {
-  it('zh matches design.md D12 verbatim', () => {
+  it('zh matches design.md D12 verbatim (+ the Quick Chat launcher strings)', () => {
     expect(menuStrings('zh')).toEqual({
       menuLabel: '桌宠菜单',
       feed: '喂食',
       play: '玩耍',
       switchCharacter: '换角色',
       exitApp: '退出 Elftia',
+      quickChat: '快捷聊天',
+      quickChatUnavailable: '快捷聊天暂时不可用',
     });
   });
 
-  it('every locale carries the same five keys, non-empty', () => {
+  it('every locale carries the same seven keys, non-empty', () => {
     const locales: PetLocale[] = ['en', 'zh', 'ja'];
     const keySets = locales.map((locale) => Object.keys(menuStrings(locale)).sort());
-    expect(keySets[0]).toEqual(['exitApp', 'feed', 'menuLabel', 'play', 'switchCharacter']);
+    expect(keySets[0]).toEqual([
+      'exitApp',
+      'feed',
+      'menuLabel',
+      'play',
+      'quickChat',
+      'quickChatUnavailable',
+      'switchCharacter',
+    ]);
     for (const locale of locales) {
       for (const value of Object.values(menuStrings(locale))) {
         expect(value.length).toBeGreaterThan(0);

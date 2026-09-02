@@ -1,7 +1,16 @@
 {
   "name": "pet-2d",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "kind": "app-extension",
+  "capabilities": {
+    "optional": [
+      {
+        "id": "elftia.quick-chat",
+        "range": "^1.0.0",
+        "target": "main"
+      }
+    ]
+  },
   "displayName": "2D Desktop Pet",
   "description": "A 2D desktop pet for Elftia: host activity facts drive a frozen 8-state grammar, rendered from machine-checkable character packs. Reference implementation of the desktop-pet character-pack contract. v0.2 adds the main-window manager page (rail destination).",
   "contributes": {

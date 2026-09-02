@@ -132,6 +132,55 @@ describe('openContextMenu', () => {
     expect(top).toBeLessThanOrEqual(window.innerHeight);
     menu.close();
   });
+
+  it('offerOptionalAction inserts Quick Chat BEFORE exit, keeps exit last, and runs on click', () => {
+    const { runtime } = fakeRuntime();
+    const run = vi.fn();
+    const menu = openContextMenu({
+      strings: menuStrings('zh'),
+      actions: makeActions(),
+      x: 10,
+      y: 10,
+      petRuntime: runtime,
+    });
+    menu.offerOptionalAction({ key: 'quick-chat', label: '快捷聊天', run });
+    const order = [...menu.element.querySelectorAll('button')].map((b) => b.dataset.petMenuAction);
+    expect(order).toEqual(['feed', 'play', 'switch', 'quick-chat', 'exit']);
+    expect(menuItem(menu, 'quick-chat').textContent).toBe('快捷聊天');
+    menuItem(menu, 'quick-chat').click();
+    expect(run).toHaveBeenCalledTimes(1);
+    expect(document.body.contains(menu.element)).toBe(false);
+  });
+
+  it('a duplicate offer and an offer to a CLOSED menu are both no-ops', () => {
+    const menu = openContextMenu({
+      strings: menuStrings('en'),
+      actions: makeActions(),
+      x: 0,
+      y: 0,
+    });
+    menu.offerOptionalAction({ key: 'quick-chat', label: 'Quick Chat', run: () => undefined });
+    menu.offerOptionalAction({ key: 'quick-chat', label: 'Quick Chat', run: () => undefined });
+    expect(menu.element.querySelectorAll('button')).toHaveLength(5);
+    menu.close();
+    menu.offerOptionalAction({ key: 'quick-chat', label: 'Quick Chat', run: () => undefined });
+    expect(document.body.contains(menu.element)).toBe(false); // never recreated
+  });
+
+  it('the refit keeps a grown menu inside the viewport', () => {
+    const menu = openContextMenu({
+      strings: menuStrings('en'),
+      actions: makeActions(),
+      x: 100000,
+      y: 100000,
+    });
+    menu.offerOptionalAction({ key: 'quick-chat', label: 'Quick Chat', run: () => undefined });
+    const top = Number.parseFloat(menu.element.style.top);
+    // 5 items * 32px + 8 = 168px tall now; the clamp must still hold.
+    expect(top).toBeLessThanOrEqual(window.innerHeight - 168 + 1);
+    expect(top).toBeGreaterThanOrEqual(0);
+    menu.close();
+  });
 });
 
 describe('attachContextMenu', () => {

@@ -35,10 +35,25 @@ export interface OpenMenuOptions {
   readonly documentRef?: Document;
 }
 
+/** One optional late-arriving menu action (`pet-2d-quick-chat-launcher`). */
+export interface MenuOptionalAction {
+  readonly key: string;
+  readonly label: string;
+  readonly run: () => void;
+}
+
 export interface MenuHandle {
   close(): void;
   /** The menu's root element (tests assert removal/content). */
   readonly element: HTMLElement;
+  /**
+   * Insert an optional action before Exit. Availability probes are async, so
+   * the item typically arrives AFTER the menu opened: a closed or superseded
+   * menu ignores the offer (a stale probe must never mutate the CURRENT
+   * menu), a duplicate offer is ignored, and the viewport clamp is refit for
+   * the grown menu. The four core actions never wait for this.
+   */
+  offerOptionalAction(action: MenuOptionalAction): void;
 }
 
 const MENU_STYLE_ID = 'pet-2d-menu-styles';
@@ -59,6 +74,24 @@ function ensureMenuStyles(documentRef: Document): void {
   style.id = MENU_STYLE_ID;
   style.textContent = MENU_CSS;
   documentRef.head.appendChild(style);
+}
+
+/** One menu button: role=menuitem, action-keyed for tests/drivers, click = close+run. */
+function buildMenuButton(
+  doc: Document,
+  item: { key: string; label: string; run: () => void },
+  close: () => void
+): HTMLButtonElement {
+  const button = doc.createElement('button');
+  button.type = 'button';
+  button.setAttribute('role', 'menuitem');
+  button.dataset.petMenuAction = item.key;
+  button.textContent = item.label;
+  button.addEventListener('click', () => {
+    close();
+    item.run();
+  });
+  return button;
 }
 
 /**
@@ -82,28 +115,38 @@ export function openContextMenu(options: OpenMenuOptions): MenuHandle {
     { key: 'exit', label: options.strings.exitApp, run: () => options.petRuntime?.requestAppExit() },
   ];
   for (const item of items) {
-    const button = doc.createElement('button');
-    button.type = 'button';
-    button.setAttribute('role', 'menuitem');
-    button.dataset.petMenuAction = item.key;
-    button.textContent = item.label;
-    button.addEventListener('click', () => {
-      close();
-      item.run();
-    });
-    menu.appendChild(button);
+    menu.appendChild(buildMenuButton(doc, item, close));
   }
 
   // Keep the menu inside the viewport (contextmenu fires near an edge when
-  // the pet is dragged there).
-  const widthGuess = 170;
-  const heightGuess = items.length * 32 + 8;
-  const maxX = Math.max(0, doc.defaultView?.innerWidth ?? 0) - widthGuess;
-  const maxY = Math.max(0, doc.defaultView?.innerHeight ?? 0) - heightGuess;
-  const x = Math.min(Math.max(options.x, 0), Math.max(maxX, 0));
-  const y = Math.min(Math.max(options.y, 0), Math.max(maxY, 0));
-  menu.style.left = `${x}px`;
-  menu.style.top = `${y}px`;
+  // the pet is dragged there). Refit-able: a late optional action grows the
+  // menu and re-runs the same clamp.
+  let itemCount = items.length;
+  function fitToViewport(): void {
+    const widthGuess = 170;
+    const heightGuess = itemCount * 32 + 8;
+    const maxX = Math.max(0, doc.defaultView?.innerWidth ?? 0) - widthGuess;
+    const maxY = Math.max(0, doc.defaultView?.innerHeight ?? 0) - heightGuess;
+    const x = Math.min(Math.max(options.x, 0), Math.max(maxX, 0));
+    const y = Math.min(Math.max(options.y, 0), Math.max(maxY, 0));
+    menu.style.left = `${x}px`;
+    menu.style.top = `${y}px`;
+  }
+  fitToViewport();
+
+  function offerOptionalAction(action: MenuOptionalAction): void {
+    if (closed || menu.querySelector(`[data-pet-menu-action="${action.key}"]`)) return;
+    const buttons = menu.querySelectorAll('button');
+    const exitButton = buttons[buttons.length - 1]; // Exit stays last by design
+    const button = buildMenuButton(doc, action, close);
+    if (exitButton?.dataset.petMenuAction === 'exit') {
+      menu.insertBefore(button, exitButton);
+    } else {
+      menu.appendChild(button);
+    }
+    itemCount += 1;
+    fitToViewport();
+  }
 
   let closed = false;
   const onOutsideDown = (event: Event): void => {
@@ -126,6 +169,7 @@ export function openContextMenu(options: OpenMenuOptions): MenuHandle {
   return {
     close,
     element: menu,
+    offerOptionalAction,
   };
 }
 
