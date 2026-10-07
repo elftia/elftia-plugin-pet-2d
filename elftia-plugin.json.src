@@ -1,6 +1,7 @@
 {
   "name": "pet-2d",
-  "version": "0.2.5",
+  "version": "0.2.6",
+  "minElftiaVersion": "0.2.8",
   "kind": "app-extension",
   "capabilities": {
     "optional": [

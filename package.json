@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "elftia-plugin-pet-2d",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "2D desktop pet plugin for Elftia — facts->state grammar, sprite player, character-pack contract, whale-girl-format compatibility.",
   "type": "module",
   "license": "MIT",
