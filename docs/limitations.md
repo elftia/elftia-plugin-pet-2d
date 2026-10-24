@@ -15,7 +15,7 @@ from a plugin.
 - **`welcome` is usually missed.** It fires only from
   `appLifecycle{phase:'started'}`, and the facts pump's single initial push
   is typically lost before the pet window's renderer subscribes (cold
-  start). You will see it when any *other* change re-pushes the snapshot
+  start). You will see it when any _other_ change re-pushes the snapshot
   while the app-started fact is still inside its 60 s window — i.e. if you
   start using the app immediately. (D13/OQ2; the host re-push follow-up
   fixes it.)
@@ -34,7 +34,7 @@ from a plugin.
   `sessionThinking` / `sessionWaitingApproval` / `turnCompleted` facts, so
   the pet is blind to them. (Child A, recorded.)
 - **Delegation facts are partial.** Delegation is default-off (source
-  inert until enabled), and its *launch*-phase failures
+  inert until enabled), and its _launch_-phase failures
   (`engine_start_failed`, `workspace_preparation_failed`) transition
   directly in the DB without passing the observer — only engine-phase
   failures reach the pet as `taskFailed`. (Child A, recorded.)
@@ -47,11 +47,11 @@ from a plugin.
 - **Clicks on transparent corner pixels are swallowed.** Window-level
   pointer capture is rectangle-based (host-side cursor polling turns
   capture on inside the window rect); the plugin's alpha mask decides
-  *whether a captured click feeds the pet*, but cannot pass an unwanted
+  _whether a captured click feeds the pet_, but cannot pass an unwanted
   click through to the app underneath. A click that lands on a fully
   transparent pixel inside the rect is consumed by the pet window and goes
   nowhere. Per-frame alpha hit regions exist in the mask code precisely to
-  keep the *pet-facing* half of this honest; the pass-through half needs a
+  keep the _pet-facing_ half of this honest; the pass-through half needs a
   host-side fix. (Child B D4.)
 - **Timer-driven behavior throttles to ~1 Hz when fully occluded.**
   Measured on the real window flags: JS timers collapse to one tick per
@@ -61,7 +61,7 @@ from a plugin.
   `backgroundThrottling:false` override exists anywhere, host or plugin.
   (Spike item ②.)
 - **No cross-plugin asset sharing.** Each pack is self-contained and
-  same-origin by construction; a `plugin://`-load from a *different*
+  same-origin by construction; a `plugin://`-load from a _different_
   plugin id is CSP-blocked (verified in the spike). There is deliberately
   no mechanism for one plugin's pet to render another plugin's assets.
 
@@ -83,13 +83,13 @@ from a plugin.
   or another window) while the page sits in a background tab appears when
   you next focus the tab — not instantly. Every WRITE re-reads immediately,
   so the page's own toggles never show stale state.
-- **Hosts < 1.53 get a degraded page, not a broken one.** Without
+- **Narrowed hosts can omit pet management.** Without
   `petRuntime.setConfig` the master controls are replaced by an
-  update-required card; the gallery, pack switching, and the ledger stay
-  fully functional because they are plugin-local (prefs/ledger read the
-  main-window localStorage, same origin as the pet window in both dev and
-  packaged layouts — the ledger's dev-vs-packaged origin split applies to
-  the page identically).
+  unavailable card; the gallery, pack switching, and the ledger stay
+  functional because they are plugin-local. This does not allow older Host
+  API majors to load this release: all three code contributions require
+  Host API 2.0.0 before activation. The sandboxed-storage limitations below
+  apply independently of management capability availability.
 - **The ledger panel is only as live as the pet window's writer.** It
   refreshes on `storage` events for the ledger key; the pet window
   debounces its writes ≤ 1 s, so the panel trails real accrual by at most
@@ -146,6 +146,6 @@ from a plugin.
 - **2D sprite packs only.** The contract (and this reference
   implementation) is 2D sprite strips driven by CSS. Unity/WebGL/3D pets
   are outside the contract: `SheetSource` accepts any `<img>`-loadable
-  URL, which makes a canvas-based renderer *theoretically* reachable, but
+  URL, which makes a canvas-based renderer _theoretically_ reachable, but
   nothing in this repo supports, tests, or documents that path. Treat it
   as experimental and unsupported.

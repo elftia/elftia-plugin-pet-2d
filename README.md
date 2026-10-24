@@ -15,6 +15,28 @@ MIT, but the 鲸鱼娘 character is ZipZipPipe's IP): it is not redistributed,
 never enters `dist/`, and must be stripped before any public publication of
 this repo — see NOTICE for the full policy and the gate that proves it.
 
+## Host API2 migration (v0.3.0)
+
+The pet window, main-window manager and main entry now all require Host API
+major 2, minor 0 and declare `builtAgainst: 2.0.0`. Older host majors cannot
+load this breaking release. Build types come from the real canonical
+`file:vendor/elftia-plugin-types-2.0.0.tgz` SDK archive committed alongside
+the lockfile, not a sibling checkout or a private declaration copy. The SDK
+is build-only and is not bundled into the plugin artifact.
+
+`elftia-plugin.json.src` remains the manifest source. Manifest staging and
+finished-tree verification independently require all three code slots to
+declare Host API major 2, minor 0, builtAgainst 2.0.0; a missing slot or stale
+major fails before release. Staging also checks the vendored SDK's SHA-512
+against its unlinked lock entry and exact repo-relative dependency.
+The existing build stages the manifest and stamps checksums.
+Character-pack formats, native permissions,
+state grammar, user packs, ledger and optional Quick Chat capability are
+unchanged. Host API2 does not change the pet facts or character-pack wire
+protocols: their `apiVersion` remains `1`, independently of the Host ABI.
+The source has no retired default/background/vision LLM selector calls; any
+host model selection remains in canonical model-role state.
+
 ## Install (into a dev or packaged Elftia ≥ the desktop-pet host runtime)
 
 1. Build and verify the installable directory:
@@ -41,14 +63,11 @@ this repo — see NOTICE for the full policy and the gate that proves it.
 4. Enable the desktop-pet master switch (Settings → Desktop Pet). The pet
    window appears.
 
-**Install-time re-scan (host ≥ 1.53):** every pet-management write —
-including a same-value patch — re-resolves pet contributors host-side
-(`pet:setConfig` calls `petWindow.refresh()` unconditionally), so a pet
-installed while the switch is already on surfaces without an OFF/ON dance
-(verified live: reinstall with the switch on keeps page, pack selection,
-ledger, and the pet window). On hosts **older than 1.53** the gap still
-applies: toggle the desktop-pet master switch OFF then ON to force a
-re-resolve.
+**Install-time re-scan:** every pet-management write — including a same-value
+patch — re-resolves pet contributors host-side (`pet:setConfig` calls
+`petWindow.refresh()` unconditionally), so a pet installed while the switch
+is already on surfaces without an OFF/ON dance. This behavior predates the
+API2 migration; the matching-major requirement is enforced before activation.
 
 ## The manager page (v0.2)
 
@@ -77,12 +96,12 @@ the plugin ships a full main-window page (`contributes.renderer`) with:
   change). If you ship a ledger-less build, this section shows an honest
   "ledger unavailable (trimmed)" card instead of breaking.
 - **Re-scan** — with no pet resolvable, the page offers a rescan row; an
-  empty management write is a legitimate re-scan request on 1.53 hosts.
+  empty management write is a legitimate re-scan request on supported hosts.
 
 Locale limit: page copy ships in **en / zh / ja** only — other app locales
 resolve by `navigator.language` primary subtag and fall back to English.
-On hosts older than 1.53 the master controls degrade to an update-required
-card; the gallery and ledger stay functional (they are plugin-local).
+If a narrowed host omits the pet management service, the master controls
+show an unavailable card; the plugin-local gallery and ledger remain functional.
 
 ## Docs
 
@@ -105,9 +124,9 @@ Two paths, one contract:
   [`docs/character-pack.md`](docs/character-pack.md).
 - **By hand:** write `packs-src/<your-pack>/pack.json` + `sheets/`, then run
   `npm run build:packs` and `npm run verify:packs`. The full contract —
-manifest tables, frame-0-is-rest-pose, the left-facing baseline, the
-15-state requirement, a worked example — is
-[`docs/character-pack.md`](docs/character-pack.md). To adapt a
+  manifest tables, frame-0-is-rest-pose, the left-facing baseline, the
+  15-state requirement, a worked example — is
+  [`docs/character-pack.md`](docs/character-pack.md). To adapt a
 
 **Where user packs live, and their lifetime:** installed user packs are
 runtime data under the host's per-plugin storage
@@ -147,9 +166,9 @@ runs as part of `npm run verify` (`verify:trim`).
 (TypeScript, ESLint, Vitest, Vite, tsx, electron, and the `@elftia/*`
 contract packages) is declared in `package.json` and pinned by
 `package-lock.json`. It borrows nothing from a parent directory or a sibling
-Elftia checkout, so a fresh clone builds anywhere. Every dependency, including
-the `@elftia/*` contract packages, now resolves from the public npm registry —
-there are no `file:` tarballs left in this repo.
+Elftia checkout, so a fresh clone builds anywhere. The SDK is the committed
+`vendor/elftia-plugin-types-2.0.0.tgz` archive; the other dependencies resolve
+from the public npm registry.
 
 `npm run verify` is the full gate: typecheck → lint → tests → pack gate →
 build (+ official checksum stamping + dist verification) → the trim proof → the

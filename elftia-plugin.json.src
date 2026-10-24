@@ -1,6 +1,6 @@
 {
   "name": "pet-2d",
-  "version": "0.2.6",
+  "version": "0.3.0",
   "minElftiaVersion": "0.2.8",
   "kind": "app-extension",
   "capabilities": {
@@ -18,22 +18,22 @@
     "pet": {
       "entry": "pet.mjs",
       "execution": "opaque-frame-v1",
-      "requiredMajor": 1,
-      "requiredMinor": 52,
-      "builtAgainst": "1.54.0"
+      "requiredMajor": 2,
+      "requiredMinor": 0,
+      "builtAgainst": "2.0.0"
     },
     "renderer": {
       "entry": "manager.mjs",
       "execution": "opaque-frame-v1",
-      "requiredMajor": 1,
-      "requiredMinor": 54,
-      "builtAgainst": "1.54.0"
+      "requiredMajor": 2,
+      "requiredMinor": 0,
+      "builtAgainst": "2.0.0"
     },
     "main": {
       "entry": "index.cjs",
-      "requiredMajor": 1,
-      "requiredMinor": 35,
-      "builtAgainst": "1.54.0"
+      "requiredMajor": 2,
+      "requiredMinor": 0,
+      "builtAgainst": "2.0.0"
     }
   },
   "permissions": [

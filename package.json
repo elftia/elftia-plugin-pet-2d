@@ -1,14 +1,14 @@
 {
   "private": true,
   "name": "elftia-plugin-pet-2d",
-  "version": "0.2.6",
+  "version": "0.3.0",
   "description": "2D desktop pet plugin for Elftia — facts->state grammar, sprite player, character-pack contract, whale-girl-format compatibility.",
   "type": "module",
   "license": "MIT",
   "devDependencies": {
     "@elftia/agent-spec": "^1.26.0",
     "@elftia/plugin-kit": "0.2.1",
-    "@elftia/plugin-types": "^1.46.0",
+    "@elftia/plugin-types": "file:vendor/elftia-plugin-types-2.0.0.tgz",
     "@eslint/js": "^9.39.2",
     "@types/adm-zip": "^0.5.7",
     "@types/archiver": "^5.3.4",
