@@ -23,6 +23,12 @@ load this breaking release. Build types come from the real canonical
 `file:vendor/elftia-plugin-types-2.0.0.tgz` SDK archive committed alongside
 the lockfile, not a sibling checkout or a private declaration copy. The SDK
 is build-only and is not bundled into the plugin artifact.
+The archive comes from canonical Elftia commit
+`658350268537e8ab83d208665b82565ace6b7224`, tree
+`08c096c10d2e9fb20c54a0b3cf06e52288836202`, including the latest merged host
+contracts. Its SHA-256 is
+`f162fde3497c884cd04e084290ea1502f83f9b467566f0c38dde24075285b190`;
+the lockfile pins its SHA-512 integrity without changing the SDK version.
 
 `elftia-plugin.json.src` remains the manifest source. Manifest staging and
 finished-tree verification independently require all three code slots to
