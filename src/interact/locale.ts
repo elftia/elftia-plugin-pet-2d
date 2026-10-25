@@ -7,11 +7,11 @@
  * every host refactor. `en` is the fallback for every unrecognized tag.
  */
 
-import type { StudioStrings } from './studioStrings';
-import { studioStrings } from './studioStrings';
+import type { StudioStrings } from "./studioStrings";
+import { studioStrings } from "./studioStrings";
 
 /** The three languages this plugin ships strings for. */
-export type PetLocale = 'en' | 'zh' | 'ja';
+export type PetLocale = "en" | "zh" | "ja";
 
 /** The context menu's four verbs (D12) + its accessible label + Quick Chat. */
 export interface MenuStrings {
@@ -28,31 +28,31 @@ export interface MenuStrings {
 
 const STRINGS: Record<PetLocale, MenuStrings> = {
   en: {
-    menuLabel: 'Pet menu',
-    feed: 'Feed',
-    play: 'Play',
-    switchCharacter: 'Switch character',
-    exitApp: 'Exit Elftia',
-    quickChat: 'Quick Chat',
-    quickChatUnavailable: 'Quick Chat is unavailable right now',
+    menuLabel: "Pet menu",
+    feed: "Feed",
+    play: "Play",
+    switchCharacter: "Switch character",
+    exitApp: "Exit Elftia",
+    quickChat: "Quick Chat",
+    quickChatUnavailable: "Quick Chat is unavailable right now",
   },
   zh: {
-    menuLabel: '桌宠菜单',
-    feed: '喂食',
-    play: '玩耍',
-    switchCharacter: '换角色',
-    exitApp: '退出 Elftia',
-    quickChat: '快捷聊天',
-    quickChatUnavailable: '快捷聊天暂时不可用',
+    menuLabel: "桌宠菜单",
+    feed: "喂食",
+    play: "玩耍",
+    switchCharacter: "换角色",
+    exitApp: "退出 Elftia",
+    quickChat: "快捷聊天",
+    quickChatUnavailable: "快捷聊天暂时不可用",
   },
   ja: {
-    menuLabel: 'ペットメニュー',
-    feed: '餌やり',
-    play: '遊ぶ',
-    switchCharacter: 'キャラ変更',
-    exitApp: 'Elftia を終了',
-    quickChat: 'クイックチャット',
-    quickChatUnavailable: 'クイックチャットは現在利用できません',
+    menuLabel: "ペットメニュー",
+    feed: "餌やり",
+    play: "遊ぶ",
+    switchCharacter: "キャラ変更",
+    exitApp: "Elftia を終了",
+    quickChat: "クイックチャット",
+    quickChatUnavailable: "クイックチャットは現在利用できません",
   },
 };
 
@@ -63,10 +63,10 @@ const STRINGS: Record<PetLocale, MenuStrings> = {
  * tags constantly and a pet that flips to English for `ja-JP` reads broken.
  */
 export function resolveLocale(language: string): PetLocale {
-  const primary = language.trim().toLowerCase().split('-')[0];
-  if (primary === 'zh') return 'zh';
-  if (primary === 'ja') return 'ja';
-  return 'en';
+  const primary = language.trim().toLowerCase().split("-")[0];
+  if (primary === "zh") return "zh";
+  if (primary === "ja") return "ja";
+  return "en";
 }
 
 export function menuStrings(locale: PetLocale): MenuStrings {
@@ -93,7 +93,7 @@ export interface PageStrings {
   readonly enabledSwitchHint: string;
   readonly opaqueFallbackSwitchLabel: string;
   readonly opaqueFallbackSwitchHint: string;
-  /** Section 2 degradation when `setConfig` is absent (host < 1.53). */
+  /** Section 2 degradation when the host omits `setConfig`. */
   readonly needsUpdateTitle: string;
   readonly needsUpdateBody: string;
   /** Section 2's unresolved-contributor row (D3). */
@@ -150,131 +150,143 @@ export interface PageStrings {
 
 const PAGE_STRINGS: Record<PetLocale, PageStrings> = {
   en: {
-    pageTitle: 'Desktop Pet',
-    presenceHiddenBadge: 'Hidden',
-    masterControlsTitle: 'Master controls',
-    enabledSwitchLabel: 'Enable desktop pet',
-    enabledSwitchHint: 'Turning this off removes the pet from the desktop',
-    opaqueFallbackSwitchLabel: 'Opaque fallback window',
-    opaqueFallbackSwitchHint: 'Show the pet window opaque when transparency is unavailable',
-    needsUpdateTitle: 'Elftia update required',
+    pageTitle: "Desktop Pet",
+    presenceHiddenBadge: "Hidden",
+    masterControlsTitle: "Master controls",
+    enabledSwitchLabel: "Enable desktop pet",
+    enabledSwitchHint: "Turning this off removes the pet from the desktop",
+    opaqueFallbackSwitchLabel: "Opaque fallback window",
+    opaqueFallbackSwitchHint:
+      "Show the pet window opaque when transparency is unavailable",
+    needsUpdateTitle: "Elftia update required",
     needsUpdateBody:
-      'This Elftia version does not expose the pet management API. Update Elftia to use the switches on this page.',
+      "This Elftia version does not expose the pet management API. Update Elftia to use the switches on this page.",
     unresolvedRowText:
-      'No pet contributor resolved — a freshly installed pet appears after a rescan',
-    rescanButton: 'Rescan',
-    multiContributorHint: 'Multiple pet contributors detected — choose the default pet in Settings',
-    offBanner: 'Pet is off — enable to put the character on your desktop',
-    enableButton: 'Enable',
-    galleryTitle: 'Character gallery',
-    ledgerTitle: 'Growth ledger',
-    ledgerUnavailableTitle: 'Growth ledger unavailable (trimmed)',
+      "No pet contributor resolved — a freshly installed pet appears after a rescan",
+    rescanButton: "Rescan",
+    multiContributorHint:
+      "Multiple pet contributors detected — choose the default pet in Settings",
+    offBanner: "Pet is off — enable to put the character on your desktop",
+    enableButton: "Enable",
+    galleryTitle: "Character gallery",
+    ledgerTitle: "Growth ledger",
+    ledgerUnavailableTitle: "Growth ledger unavailable (trimmed)",
     ledgerUnavailableBody:
-      'This build ships without the ledger module — growth is neither recorded nor shown in this build; the pet itself is unaffected.',
-    ledgerLevelLabel: 'Level',
-    ledgerNoTitle: 'No title yet',
-    ledgerStatTasks: 'Tasks',
-    ledgerStatFailures: 'Failures',
-    ledgerStatTurns: 'Turns',
-    ledgerStatMediaJobs: 'Media jobs',
-    ledgerStatActive: 'Companion time',
-    ledgerMemoryTitle: 'Memory',
-    ledgerMemoryEmpty: 'No memories yet',
-    footerNote: 'The pet\'s host-activity coverage has gaps — see the plugin README.',
-    sectionPlaceholder: 'This section fills in as the page is built out.',
-    cardStatesCaption: '{count} states',
-    cardSelectedBadge: 'Current',
-    userPackChip: 'User pack',
-    packExportAction: 'Export',
-    packDeleteAction: 'Delete',
-    exportDoneNote: 'Exported to {path}',
-    importAction: 'Import .petpack…',
+      "This build ships without the ledger module — growth is neither recorded nor shown in this build; the pet itself is unaffected.",
+    ledgerLevelLabel: "Level",
+    ledgerNoTitle: "No title yet",
+    ledgerStatTasks: "Tasks",
+    ledgerStatFailures: "Failures",
+    ledgerStatTurns: "Turns",
+    ledgerStatMediaJobs: "Media jobs",
+    ledgerStatActive: "Companion time",
+    ledgerMemoryTitle: "Memory",
+    ledgerMemoryEmpty: "No memories yet",
+    footerNote:
+      "The pet's host-activity coverage has gaps — see the plugin README.",
+    sectionPlaceholder: "This section fills in as the page is built out.",
+    cardStatesCaption: "{count} states",
+    cardSelectedBadge: "Current",
+    userPackChip: "User pack",
+    packExportAction: "Export",
+    packDeleteAction: "Delete",
+    exportDoneNote: "Exported to {path}",
+    importAction: "Import .petpack…",
     importDoneNote: 'Imported pack "{id}"',
-    importFailedNote: 'Import failed: {problem}',
-    studio: studioStrings('en'),
+    importFailedNote: "Import failed: {problem}",
+    studio: studioStrings("en"),
   },
   zh: {
-    pageTitle: '桌面宠物',
-    presenceHiddenBadge: '已隐藏',
-    masterControlsTitle: '主控开关',
-    enabledSwitchLabel: '启用桌面宠物',
-    enabledSwitchHint: '关闭后桌宠角色将从桌面消失',
-    opaqueFallbackSwitchLabel: '不透明回退窗口',
-    opaqueFallbackSwitchHint: '透明窗口不可用时以不透明模式显示',
-    needsUpdateTitle: '需要更新 Elftia',
-    needsUpdateBody: '当前 Elftia 版本不提供桌宠管理接口，请更新 Elftia 后使用此页的开关。',
-    unresolvedRowText: '未解析到宠物贡献者 — 重新扫描后已安装的宠物会出现在这里',
-    rescanButton: '重新扫描',
-    multiContributorHint: '检测到多个宠物贡献者，请在设置中选择默认宠物',
-    offBanner: '宠物已关闭 — 开启后角色将出现在桌面',
-    enableButton: '开启',
-    galleryTitle: '角色画廊',
-    ledgerTitle: '成长账本',
-    ledgerUnavailableTitle: '成长账本不可用（已被裁剪）',
-    ledgerUnavailableBody: '此构建未携带账本模块 — 成长不会被记录，此页也无法显示；宠物本身不受影响。',
-    ledgerLevelLabel: '等级',
-    ledgerNoTitle: '还没有称号',
-    ledgerStatTasks: '任务',
-    ledgerStatFailures: '失败',
-    ledgerStatTurns: '回合',
-    ledgerStatMediaJobs: '媒体任务',
-    ledgerStatActive: '陪伴时长',
-    ledgerMemoryTitle: '记忆',
-    ledgerMemoryEmpty: '还没有记忆',
-    footerNote: '桌宠感知的宿主动作存在覆盖缺口，详见插件 README。',
-    sectionPlaceholder: '此区块将在后续步骤填充。',
-    cardStatesCaption: '{count} 状态',
-    cardSelectedBadge: '当前',
-    userPackChip: '用户包',
-    packExportAction: '导出',
-    packDeleteAction: '删除',
-    exportDoneNote: '已导出到 {path}',
-    importAction: '导入 .petpack…',
-    importDoneNote: '已导入角色包「{id}」',
-    importFailedNote: '导入失败：{problem}',
-    studio: studioStrings('zh'),
+    pageTitle: "桌面宠物",
+    presenceHiddenBadge: "已隐藏",
+    masterControlsTitle: "主控开关",
+    enabledSwitchLabel: "启用桌面宠物",
+    enabledSwitchHint: "关闭后桌宠角色将从桌面消失",
+    opaqueFallbackSwitchLabel: "不透明回退窗口",
+    opaqueFallbackSwitchHint: "透明窗口不可用时以不透明模式显示",
+    needsUpdateTitle: "需要更新 Elftia",
+    needsUpdateBody:
+      "当前 Elftia 版本不提供桌宠管理接口，请更新 Elftia 后使用此页的开关。",
+    unresolvedRowText:
+      "未解析到宠物贡献者 — 重新扫描后已安装的宠物会出现在这里",
+    rescanButton: "重新扫描",
+    multiContributorHint: "检测到多个宠物贡献者，请在设置中选择默认宠物",
+    offBanner: "宠物已关闭 — 开启后角色将出现在桌面",
+    enableButton: "开启",
+    galleryTitle: "角色画廊",
+    ledgerTitle: "成长账本",
+    ledgerUnavailableTitle: "成长账本不可用（已被裁剪）",
+    ledgerUnavailableBody:
+      "此构建未携带账本模块 — 成长不会被记录，此页也无法显示；宠物本身不受影响。",
+    ledgerLevelLabel: "等级",
+    ledgerNoTitle: "还没有称号",
+    ledgerStatTasks: "任务",
+    ledgerStatFailures: "失败",
+    ledgerStatTurns: "回合",
+    ledgerStatMediaJobs: "媒体任务",
+    ledgerStatActive: "陪伴时长",
+    ledgerMemoryTitle: "记忆",
+    ledgerMemoryEmpty: "还没有记忆",
+    footerNote: "桌宠感知的宿主动作存在覆盖缺口，详见插件 README。",
+    sectionPlaceholder: "此区块将在后续步骤填充。",
+    cardStatesCaption: "{count} 状态",
+    cardSelectedBadge: "当前",
+    userPackChip: "用户包",
+    packExportAction: "导出",
+    packDeleteAction: "删除",
+    exportDoneNote: "已导出到 {path}",
+    importAction: "导入 .petpack…",
+    importDoneNote: "已导入角色包「{id}」",
+    importFailedNote: "导入失败：{problem}",
+    studio: studioStrings("zh"),
   },
   ja: {
-    pageTitle: 'デスクトップペット',
-    presenceHiddenBadge: '非表示',
-    masterControlsTitle: 'メインスイッチ',
-    enabledSwitchLabel: 'デスクトップペットを有効化',
-    enabledSwitchHint: 'オフにするとデスクトップからキャラクターが消えます',
-    opaqueFallbackSwitchLabel: '不透明フォールバックウィンドウ',
-    opaqueFallbackSwitchHint: '透明ウィンドウが使えない環境で不透明表示にします',
-    needsUpdateTitle: 'Elftia の更新が必要',
+    pageTitle: "デスクトップペット",
+    presenceHiddenBadge: "非表示",
+    masterControlsTitle: "メインスイッチ",
+    enabledSwitchLabel: "デスクトップペットを有効化",
+    enabledSwitchHint: "オフにするとデスクトップからキャラクターが消えます",
+    opaqueFallbackSwitchLabel: "不透明フォールバックウィンドウ",
+    opaqueFallbackSwitchHint:
+      "透明ウィンドウが使えない環境で不透明表示にします",
+    needsUpdateTitle: "Elftia の更新が必要",
     needsUpdateBody:
-      'この Elftia はペット管理 API を提供していません。このページのスイッチを使用するには Elftia を更新してください。',
-    unresolvedRowText: 'ペットコントリビューターが見つかりません — 再スキャンでインストール済みペットが表示されます',
-    rescanButton: '再スキャン',
-    multiContributorHint: '複数のペットコントリビューターを検出 — 設定で既定のペットを選択してください',
-    offBanner: 'ペットはオフです — 有効化するとキャラクターがデスクトップに現れます',
-    enableButton: '有効化',
-    galleryTitle: 'キャラクターギャラリー',
-    ledgerTitle: '成長レジャー',
-    ledgerUnavailableTitle: '成長レジャーは利用できません（トリム済み）',
-    ledgerUnavailableBody: 'このビルドにはレジャーモジュールが含まれません — 成長は記録されず、このページにも表示されません。ペット自体には影響しません。',
-    ledgerLevelLabel: 'レベル',
-    ledgerNoTitle: '称号はまだありません',
-    ledgerStatTasks: 'タスク',
-    ledgerStatFailures: '失敗',
-    ledgerStatTurns: 'ターン',
-    ledgerStatMediaJobs: 'メディア処理',
-    ledgerStatActive: '同伴時間',
-    ledgerMemoryTitle: 'メモリー',
-    ledgerMemoryEmpty: 'メモリーはまだありません',
-    footerNote: 'ホスト活動の検知には抜けがあります — 詳細はプラグイン README を参照。',
-    sectionPlaceholder: 'このセクションは今後のステップで埋まります。',
-    cardStatesCaption: '{count} 状態',
-    cardSelectedBadge: '現在',
-    userPackChip: 'ユーザーパック',
-    packExportAction: 'エクスポート',
-    packDeleteAction: '削除',
-    exportDoneNote: '{path} にエクスポートしました',
-    importAction: '.petpack をインポート…',
-    importDoneNote: 'パック「{id}」をインポートしました',
-    importFailedNote: 'インポート失敗：{problem}',
-    studio: studioStrings('ja'),
+      "この Elftia はペット管理 API を提供していません。このページのスイッチを使用するには Elftia を更新してください。",
+    unresolvedRowText:
+      "ペットコントリビューターが見つかりません — 再スキャンでインストール済みペットが表示されます",
+    rescanButton: "再スキャン",
+    multiContributorHint:
+      "複数のペットコントリビューターを検出 — 設定で既定のペットを選択してください",
+    offBanner:
+      "ペットはオフです — 有効化するとキャラクターがデスクトップに現れます",
+    enableButton: "有効化",
+    galleryTitle: "キャラクターギャラリー",
+    ledgerTitle: "成長レジャー",
+    ledgerUnavailableTitle: "成長レジャーは利用できません（トリム済み）",
+    ledgerUnavailableBody:
+      "このビルドにはレジャーモジュールが含まれません — 成長は記録されず、このページにも表示されません。ペット自体には影響しません。",
+    ledgerLevelLabel: "レベル",
+    ledgerNoTitle: "称号はまだありません",
+    ledgerStatTasks: "タスク",
+    ledgerStatFailures: "失敗",
+    ledgerStatTurns: "ターン",
+    ledgerStatMediaJobs: "メディア処理",
+    ledgerStatActive: "同伴時間",
+    ledgerMemoryTitle: "メモリー",
+    ledgerMemoryEmpty: "メモリーはまだありません",
+    footerNote:
+      "ホスト活動の検知には抜けがあります — 詳細はプラグイン README を参照。",
+    sectionPlaceholder: "このセクションは今後のステップで埋まります。",
+    cardStatesCaption: "{count} 状態",
+    cardSelectedBadge: "現在",
+    userPackChip: "ユーザーパック",
+    packExportAction: "エクスポート",
+    packDeleteAction: "削除",
+    exportDoneNote: "{path} にエクスポートしました",
+    importAction: ".petpack をインポート…",
+    importDoneNote: "パック「{id}」をインポートしました",
+    importFailedNote: "インポート失敗：{problem}",
+    studio: studioStrings("ja"),
   },
 };
 
@@ -293,13 +305,18 @@ export function pageStrings(locale: PetLocale): PageStrings {
 export function resolvePageLocale(): PetLocale {
   try {
     const stored =
-      typeof window !== 'undefined' ? window.localStorage?.getItem('locale') : null;
-    if (stored === 'en' || stored === 'zh' || stored === 'ja') return stored;
+      typeof window !== "undefined"
+        ? window.localStorage?.getItem("locale")
+        : null;
+    if (stored === "en" || stored === "zh" || stored === "ja") return stored;
   } catch {
     /* storage errors degrade to the navigator path */
   }
-  if (typeof navigator !== 'undefined' && typeof navigator.language === 'string') {
+  if (
+    typeof navigator !== "undefined" &&
+    typeof navigator.language === "string"
+  ) {
     return resolveLocale(navigator.language);
   }
-  return 'en';
+  return "en";
 }

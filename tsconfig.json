@@ -25,7 +25,7 @@
     // arrives as a normal package, so a third-party pack author gets the same
     // resolution the maintainers do. `@elftia/agent-spec` (plugin-types' peer,
     // referenced only transitively from its .d.ts) is declared for the same
-    // reason. Both resolve from the public npm registry.
+    // reason. plugin-types uses the committed vendor SDK; agent-spec uses npm.
     "types": []
   },
   "include": [

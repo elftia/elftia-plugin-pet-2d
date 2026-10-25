@@ -24,11 +24,7 @@
  * `host.petRuntime` is OPTIONAL (F5): without it the pet runs facts-free
  * (idle/sleep/stroll/interactions only) with one console.warn.
  */
-import type {
-  AgentUiHostApi,
-  AgentUiPetRuntime,
-  HOST_API_VERSION,
-} from '@elftia/plugin-types';
+import type { AgentUiHostApi, AgentUiPetRuntime } from "@elftia/plugin-types";
 
 import {
   nextFacingTurnAt,
@@ -36,18 +32,25 @@ import {
   nextWorkingInterlude,
   type RandomSource,
   type WorkingInterludePlan,
-} from './brain/rhythm';
-import { deriveSense, type LocalState } from './brain/sense';
-import { pickState } from './brain/stateTable';
-import type { PetFactsSnapshotLike } from './contract/facts';
-import type { LedgerPort } from './contract/ledgerPort';
-import type { PetState } from './contract/petState';
-import { menuStrings, resolveLocale } from './interact/locale';
-import { attachContextMenu, type MenuHandle, openContextMenu } from './interact/menu';
-import { attachPointerHandlers, createPointerController } from './interact/pointer';
-import { createQuickChatLauncher } from './interact/quickChat';
-import { type CharacterPack } from './packs/loadPack';
-import { DEFAULT_PACK_ID, isKnownPackId } from './packs/registry';
+} from "./brain/rhythm";
+import { deriveSense, type LocalState } from "./brain/sense";
+import { pickState } from "./brain/stateTable";
+import type { PetFactsSnapshotLike } from "./contract/facts";
+import type { LedgerPort } from "./contract/ledgerPort";
+import type { PetState } from "./contract/petState";
+import { menuStrings, resolveLocale } from "./interact/locale";
+import {
+  attachContextMenu,
+  type MenuHandle,
+  openContextMenu,
+} from "./interact/menu";
+import {
+  attachPointerHandlers,
+  createPointerController,
+} from "./interact/pointer";
+import { createQuickChatLauncher } from "./interact/quickChat";
+import { type CharacterPack } from "./packs/loadPack";
+import { DEFAULT_PACK_ID, isKnownPackId } from "./packs/registry";
 import {
   nextPackInRotation,
   PACKS_REV_KEY,
@@ -56,18 +59,18 @@ import {
   resolvePack,
   rotationPool,
   type UserPackSummary,
-} from './packs/userPacks';
-import type { Facing } from './render/facing';
-import { createBrowserHitTestDeps } from './render/hitTest';
-import type { PetWindowSize } from './render/sheetGeometry';
-import { createStage, type Stage, type StageEntry } from './render/stage';
+} from "./packs/userPacks";
+import type { Facing } from "./render/facing";
+import { createBrowserHitTestDeps } from "./render/hitTest";
+import type { PetWindowSize } from "./render/sheetGeometry";
+import { createStage, type Stage, type StageEntry } from "./render/stage";
 import {
   createPrefsStore,
   PREFS_STORAGE_KEY,
   type PrefsStore,
   readPrefs,
-} from './state/prefs';
-import { safeLocalStorage } from './state/safeStorage';
+} from "./state/prefs";
+import { safeLocalStorage } from "./state/safeStorage";
 
 /** D13: the sense tick. 8 Hz — far finer than any window that matters. */
 const SENSE_TICK_MS = 125;
@@ -87,7 +90,7 @@ export async function activate(host: AgentUiHostApi): Promise<void> {
   } catch (error) {
     // The last-ditch net: anything the individual guards missed still must
     // not surface as a rejected activate() (blank window, D13).
-    console.error('[pet-2d] activate failed', error);
+    console.error("[pet-2d] activate failed", error);
   }
 }
 
@@ -101,14 +104,15 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
   // --- feature-detect the optional runtime (F5) -----------------------------
   const runtime: AgentUiPetRuntime | undefined = host.petRuntime;
   if (!runtime) {
-    console.warn('[pet-2d] host.petRuntime absent — running facts-free (optional per F5)');
+    console.warn(
+      "[pet-2d] host.petRuntime absent — running facts-free (optional per F5)",
+    );
   }
 
   // --- user packs (D6): scoped ipc to the main half's store ------------------
-  // `host.ipc` is member-non-optional in the 1.54 types but resolvePack still
-  // feature-detects it (an older host or a narrowed preload must degrade to
-  // built-ins, never fail the boot). The cache seeds rotation instantly; the
-  // live fetch replaces it as soon as it lands.
+  // `host.ipc` is non-optional in SDK2, but a narrowed preload must still
+  // degrade to built-ins rather than fail boot. The cache seeds rotation
+  // instantly; the live fetch replaces it as soon as it lands.
   const ipc: unknown = host.ipc;
   let userPacks: UserPackSummary[] = readCachedUserPacks(safeLocalStorage());
   function isSelectablePack(id: string): boolean {
@@ -123,11 +127,13 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
   // A stored id may now be a USER pack too, so an unknown id is no longer
   // coerced at boot — resolvePack decides (user ipc pack, or the glyph).
   const prefs: PrefsStore = createPrefsStore();
-  let packId: string = prefs.read().packId ?? '';
-  if (packId === '') packId = DEFAULT_PACK_ID;
+  let packId: string = prefs.read().packId ?? "";
+  if (packId === "") packId = DEFAULT_PACK_ID;
 
   // --- stage + pack (both degrade, never throw) ------------------------------
-  const stage: Stage = createStage({ hitTestDeps: createBrowserHitTestDeps(document) });
+  const stage: Stage = createStage({
+    hitTestDeps: createBrowserHitTestDeps(document),
+  });
   let pack: CharacterPack = await resolvePack(packId, { ipc });
 
   let windowSize: PetWindowSize = { width: 256, height: 256 };
@@ -144,16 +150,21 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
     try {
       const config = await runtime.getConfig();
       applyWindowSize(config.window);
-      console.info(`[pet-2d] config re-read (${reason}): presenceHidden=${config.presenceHidden}`);
+      console.info(
+        `[pet-2d] config re-read (${reason}): presenceHidden=${config.presenceHidden}`,
+      );
     } catch (error) {
-      console.warn('[pet-2d] getConfig() failed; keeping last window size', error);
+      console.warn(
+        "[pet-2d] getConfig() failed; keeping last window size",
+        error,
+      );
     }
   }
   try {
     const config = await runtime?.getConfig();
     if (config) applyWindowSize(config.window);
   } catch {
-    console.warn('[pet-2d] initial getConfig() failed; using 256×256');
+    console.warn("[pet-2d] initial getConfig() failed; using 256×256");
   }
 
   // --- facts (cold start: null until/unless the first push) ------------------
@@ -165,7 +176,7 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
       snapshot = push as unknown as PetFactsSnapshotLike;
     });
   } catch (error) {
-    console.warn('[pet-2d] subscribeFacts failed; staying facts-free', error);
+    console.warn("[pet-2d] subscribeFacts failed; staying facts-free", error);
   }
 
   // --- interaction-local state (the LocalState slice sense.ts reads) --------
@@ -176,8 +187,8 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
   let menuInteractionAt = now();
   const markInteraction = (): number => (menuInteractionAt = now());
 
-  let currentPetState: PetState = 'idle';
-  let facing: Facing = 'left';
+  let currentPetState: PetState = "idle";
+  let facing: Facing = "left";
 
   // --- ledger (D10) — the ONLY import of src/ledger/ in the tree --------
   // Dynamic + guarded: `scripts/verify-trim.mjs` (task 8.6) deletes the
@@ -186,10 +197,12 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
   // pet (never a failed activate — companionship bookkeeping, not gameplay).
   let ledger: LedgerPort | undefined;
   try {
-    const { createLedger } = await import('./ledger/createLedger');
+    const { createLedger } = await import("./ledger/createLedger");
     ledger = createLedger();
   } catch {
-    console.info('[pet-2d] ledger module absent — running without (trimmed build)');
+    console.info(
+      "[pet-2d] ledger module absent — running without (trimmed build)",
+    );
   }
 
   const pointer = createPointerController({
@@ -199,11 +212,11 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
     onDragEnd: () => {
       // Being carried around delights the pet — `joy`'s trigger (1.6 s).
       joyfulAt = now();
-      ledger?.noteInteraction('drag');
+      ledger?.noteInteraction("drag");
     },
     onOpaqueDown: () => {
       // Touch wakes a SLEEPING pet; a tap on an awake pet is nothing (D12).
-      if (currentPetState === 'sleep') wakingAt = now();
+      if (currentPetState === "sleep") wakingAt = now();
     },
   });
   const detachPointer = attachPointerHandlers(stage.elements.stage, pointer);
@@ -213,7 +226,7 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
   let strollDirection: 1 | -1 = 1;
   let strollDueAt = nextStrollAt(now(), random);
   let interludePlan: WorkingInterludePlan = nextWorkingInterlude(now(), random);
-  let interludeWindow: LocalState['workingInterludeWindow'] = null;
+  let interludeWindow: LocalState["workingInterludeWindow"] = null;
   let thinkingHeld = false;
   let facingTurnDueAt = nextFacingTurnAt(now(), random);
 
@@ -236,7 +249,11 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
   }
 
   function syncRenderContext(): void {
-    pointer.setRenderContext({ state: currentPetState, frame: stage.player.currentFrame, stagePx });
+    pointer.setRenderContext({
+      state: currentPetState,
+      frame: stage.player.currentFrame,
+      stagePx,
+    });
   }
   stage.player.onFrameChange = () => syncRenderContext();
 
@@ -249,7 +266,10 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
       playingAt,
       wakingAt,
       joyfulAt,
-      lastInteractionAt: Math.max(pointerLocal.lastInteractionAt, menuInteractionAt),
+      lastInteractionAt: Math.max(
+        pointerLocal.lastInteractionAt,
+        menuInteractionAt,
+      ),
       strollTriggeredAt,
       workingInterludeWindow: interludeWindow,
     };
@@ -268,7 +288,11 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
       interludeWindow = null;
     }
     thinkingHeld = senseProbe.thinking;
-    if (thinkingHeld && interludeWindow === null && t >= interludePlan.triggerAt) {
+    if (
+      thinkingHeld &&
+      interludeWindow === null &&
+      t >= interludePlan.triggerAt
+    ) {
       interludeWindow = { startedAt: t, endsAt: t + interludePlan.durationMs };
     }
     if (interludeWindow !== null && t >= interludeWindow.endsAt) {
@@ -281,8 +305,12 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
       strollDueAt = nextStrollAt(t, random);
     }
     if (t >= facingTurnDueAt) {
-      if (currentPetState === 'idle' || currentPetState === 'think' || currentPetState === 'wait') {
-        facing = facing === 'left' ? 'right' : 'left';
+      if (
+        currentPetState === "idle" ||
+        currentPetState === "think" ||
+        currentPetState === "wait"
+      ) {
+        facing = facing === "left" ? "right" : "left";
         stage.setFacing(facing);
       }
       facingTurnDueAt = nextFacingTurnAt(t, random);
@@ -326,10 +354,13 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
   }
 
   async function switchPack(): Promise<void> {
-    const next = nextPackInRotation(packId, rotationPool(userPacks.map((p) => p.id)));
+    const next = nextPackInRotation(
+      packId,
+      rotationPool(userPacks.map((p) => p.id)),
+    );
     prefs.setPackId(next);
     await applyPack(next);
-    ledger?.noteInteraction('switchCharacter');
+    ledger?.noteInteraction("switchCharacter");
   }
 
   // Cross-window selection (task 7.1): the manager page's Gallery writes the
@@ -343,7 +374,7 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
   function onPrefsStorage(event: StorageEvent): void {
     if (event.key !== PREFS_STORAGE_KEY) return;
     if (event.storageArea !== safeLocalStorage()) return;
-    const next = readPrefs(safeLocalStorage()).packId ?? '';
+    const next = readPrefs(safeLocalStorage()).packId ?? "";
     if (next === packId) return;
     if (isKnownPackId(next)) {
       void applyPack(next);
@@ -366,7 +397,7 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
     if (event.storageArea !== safeLocalStorage()) return;
     void (async () => {
       await refetchUserPacks();
-      if (packId !== '' && !isSelectablePack(packId)) {
+      if (packId !== "" && !isSelectablePack(packId)) {
         prefs.setPackId(DEFAULT_PACK_ID);
         await applyPack(DEFAULT_PACK_ID);
       }
@@ -385,7 +416,13 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
   const detachContextMenu = attachContextMenu(
     stage.elements.stage,
     (x, y) =>
-      stage.hitTest.isOpaqueAt(currentPetState, stage.player.currentFrame, x, y, stagePx),
+      stage.hitTest.isOpaqueAt(
+        currentPetState,
+        stage.player.currentFrame,
+        x,
+        y,
+        stagePx,
+      ),
     (viewportX, viewportY) => {
       menu?.close();
       menu = openContextMenu({
@@ -397,12 +434,12 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
           onFeed: () => {
             feedingAt = now();
             markInteraction();
-            ledger?.noteInteraction('feed');
+            ledger?.noteInteraction("feed");
           },
           onPlay: () => {
             playingAt = now();
             markInteraction();
-            ledger?.noteInteraction('play');
+            ledger?.noteInteraction("play");
           },
           onSwitchCharacter: () => {
             void switchPack();
@@ -415,18 +452,18 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
         // flight) lands on a CLOSED handle — offerOptionalAction no-ops.
         if (!available) return;
         menuGeneration.offerOptionalAction({
-          key: 'quick-chat',
+          key: "quick-chat",
           label: strings.quickChat,
           run: () => void quickChat.activate(),
         });
       });
       return menu;
-    }
+    },
   );
 
   // --- presence pause (D12): hidden stops both clocks, visible resumes -----
   function onVisibilityChange(): void {
-    if (document.visibilityState === 'hidden') {
+    if (document.visibilityState === "hidden") {
       stopTick();
       stage.player.stop();
       prefs.flush();
@@ -434,22 +471,22 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
       // its own visibilitychange/pagehide listeners, task 8.2) — LedgerPort
       // deliberately has no flush verb for pet.ts to reach through.
     } else {
-      void refreshConfig('visibility resumed');
-      applyState('idle'); // resume from idle, never mid-gesture (D12)
+      void refreshConfig("visibility resumed");
+      applyState("idle"); // resume from idle, never mid-gesture (D12)
       stage.player.start();
       startTick();
     }
   }
-  document.addEventListener('visibilitychange', onVisibilityChange);
+  document.addEventListener("visibilitychange", onVisibilityChange);
   const onPageHide = (): void => {
     prefs.flush();
     // Close the transient Quick Chat surface state + best-effort release any
     // in-flight lease (late acquisitions release without invoking).
     quickChat.dispose();
   };
-  window.addEventListener('pagehide', onPageHide);
-  window.addEventListener('storage', onPrefsStorage);
-  window.addEventListener('storage', onPacksRevStorage);
+  window.addEventListener("pagehide", onPageHide);
+  window.addEventListener("storage", onPrefsStorage);
+  window.addEventListener("storage", onPacksRevStorage);
 
   // v1 has no deactivate verb — activate() runs once per pet window and the
   // window's own teardown is the teardown. The detach handles are collected
@@ -460,26 +497,15 @@ async function startPet(host: AgentUiHostApi): Promise<void> {
     () => quickChat.dispose(),
     stopTick,
     () => stage.player.stop(),
-    () => document.removeEventListener('visibilitychange', onVisibilityChange),
-    () => window.removeEventListener('pagehide', onPageHide),
-    () => window.removeEventListener('storage', onPrefsStorage),
-    () => window.removeEventListener('storage', onPacksRevStorage),
+    () => document.removeEventListener("visibilitychange", onVisibilityChange),
+    () => window.removeEventListener("pagehide", onPageHide),
+    () => window.removeEventListener("storage", onPrefsStorage),
+    () => window.removeEventListener("storage", onPacksRevStorage),
   ];
   disposersFromPreviousActivate = disposers;
 
   // --- go ---------------------------------------------------------------------
-  applyState('idle');
+  applyState("idle");
   stage.player.start();
   startTick();
 }
-
-// Type-only proof for task 2.3's gate ("HOST_API_VERSION resolves to
-// 1.54.0" — bumped with the v1.54 manager-page promotion): errors at compile
-// time if the pinned host API version this repo was built against ever
-// drifts, with zero runtime cost or bundle impact
-// (`import type` + `verbatimModuleSyntax` erase it before the bundle).
-type _HostApiVersionProbe = typeof HOST_API_VERSION extends '1.54.0'
-  ? true
-  : ['HOST_API_VERSION drifted from 1.54.0 — see tsconfig.json paths note'];
-const _hostApiVersionProbe: _HostApiVersionProbe = true as _HostApiVersionProbe;
-void _hostApiVersionProbe;
